@@ -26,15 +26,15 @@ class CoreliaTemplate
      */
     public function render( array $vars = [] ): string
     {
-        if( !file_exists( $this->templatePath ) ){
+        if (!file_exists($this->templatePath)) {
             return "<!-- Template non trouvé : {$this->templatePath} -->";
         }
 
-        $output = file_get_contents( $this->templatePath );
+        $output = file_get_contents($this->templatePath);
 
         // Remplacement simple des variables {var}
-        foreach( $vars as $key => $value ){
-            $output = str_replace( '{' . $key . '}', htmlspecialchars( (string)$value ), $value );
+        foreach ($vars as $key => $value) {
+            $output = str_replace('{' . $key . '}', htmlspecialchars((string)$value), $output);
         }
 
         return $output;

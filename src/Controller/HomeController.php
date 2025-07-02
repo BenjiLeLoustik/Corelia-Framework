@@ -4,6 +4,8 @@
 
 namespace App\Controller;
 
+use Corelia\Template\CoreliaTemplate;
+
 /**
  * Contrôleur d'exemple pour CoreliaPHP
  * Accessible via : /
@@ -16,13 +18,12 @@ class HomeController
      */
     public function index()
     {
-        // Affiche la vue d'accueil
-        $view = __DIR__ . '/../Views/Home/index.ctpl';
-        if( file_exists( $view ) ){
-            echo file_get_contents( $view );
-        }else{
-            echo "<h1>Bienvenue sur votre première page CoreliaPHP §</h1>";
-        }
+        // Exemple de passage de variable à la vue
+        $tpl = new CoreliaTemplate( __DIR__ . '/../Views/Home/index.ctpl' );
+        echo $tpl->render([
+            'nom' => 'Développeur',
+            'framework' => 'CoreliaPHP'
+        ]);
     }
 
 }
