@@ -7,37 +7,50 @@ require __DIR__ . '/vendor/autoload.php';
 
 use Corelia\CLI\ModuleManager;
 
+// Tableau associatif des commandes et descriptions
+$commands = [
+    'module:list'                        => 'Liste les modules.',
+    'module:enable <module>'             => 'Active un module.',
+    'module:disable <module>'            => 'Désactive un module.',
+    'make:module <name>'                 => 'Crée un nouveau module.',
+    'make:controller <module> <name>'    => 'Crée un contrôleur.',
+    'help'                               => 'Affiche cette aide.',
+];
+
 $argv = $_SERVER['argv'];
 $argc = $_SERVER['argc'];
 
-if( $argc < 2 ){
-    echo "Usage : php corelia <commande> [options]\n";
-    echo "Commande(s) disponible(s):\n";
-    echo "  - module:list               list les modules.\n";
-    echo "  - module:enable <module>    Active un module.\n";
-    echo "  - module:disabled <module>  Désactive un module. \n";
-    exit(1);
+$command = $argv[1] ?? 'help';
+
+if ($command === 'help' || $argc < 2) {
+    echo "\nUsage : php corelia <commande> [options]\n\n";
+    echo "Commandes disponibles pour :\n";
+    foreach ($commands as $name => $desc) {
+        printf("  %-40s %s\n", $name, $desc);
+    }
+    echo "\n";
+    exit(0);
 }
 
-$command = $argv[1];
-$manager = new ModuleManager( __DIR__ . '/modules' );
+$manager = new ModuleManager(__DIR__ . '/modules');
 
-switch( $command ){
+switch ($command) {
     case 'module:list':
         $manager->list();
         break;
     case 'module:enable':
-        $manager->enable( $argv[2] ?? null );
+        $manager->enable($argv[2] ?? null);
         break;
     case 'module:disable':
-        $manager->disable( $argv[2] ?? null );
+        $manager->disable($argv[2] ?? null);
         break;
     case 'make:module':
-        ( new \Corelia\CLI\Generator( __DIR__ ) )->makeModule( $argv[2] ?? null );
+        (new \Corelia\CLI\Generator(__DIR__))->makeModule($argv[2] ?? null);
         break;
     case 'make:controller':
-        ( new \Corelia\CLI\Generator( __DIR__ ) )->makeController( $argv[2] ?? null, $argv[3] ?? null );
+        (new \Corelia\CLI\Generator(__DIR__))->makeController($argv[2] ?? null, $argv[3] ?? null);
         break;
-    default: 
-        echo "Commande inconnue.\n";
+    default:
+        echo "\nCommande inconnue. Tapez 'php corelia help' pour la liste des commandes.\n\n";
+        exit(1);
 }

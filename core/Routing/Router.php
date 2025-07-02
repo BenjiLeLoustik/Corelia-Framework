@@ -8,35 +8,34 @@ use Corelia\Http\Request;
 
 /**
  * Routeur HTTP pour CoreliaPHP.
- * Permet d'ajouter et de matcher des routes avec méthodes et paramètres.
  */
 class Router
 {
-
     protected array $routes = [];
 
     /**
      * Ajoute une route.
-     * @param string $method HTTP method (GET, POST, etc.)
-     * @param string $path   Chemin avec ou sans paramètres (ex: /blog/{id})
-     * @param array  $handler [Classe, méthode]
+     * @param string|array $methods HTTP method(s) (GET, POST, etc.)
+     * @param string $path
+     * @param array $handler [Classe, méthode]
      */
-    public function add( string $method, string $path, array $handler ): self
+    public function add($methods, string $path, $handler): self
     {
-        // Normalisation du chemin
-        $path = '/' . trim( $path, '/' );
-        $this->routes[] = [
-            'method'    => $method,
-            'path'      => $path,
-            'handler'   => $handler
-        ];
+        $path = '/' . trim($path, '/');
+        foreach ((array)$methods as $method) {
+            $this->routes[] = [
+                'method'  => strtoupper($method),
+                'path'    => $path,
+                'handler' => $handler
+            ];
+        }
         return $this;
     }
 
     /**
      * Tente de trouver une route correspondant à la requête.
      */
-    public function match( Request $request ): ?Route
+    public function match(Request $request): ?Route
     {
         $reqMethod = strtoupper($request->method());
         $reqPath = '/' . trim(parse_url($request->uri(), PHP_URL_PATH), '/');
@@ -48,9 +47,7 @@ class Router
             $pattern = '#^' . $pattern . '$#';
 
             if (preg_match($pattern, $reqPath, $matches)) {
-                array_shift($matches); // Retire la chaîne complète
-
-                // Crée une instance de Route avec les bons paramètres
+                array_shift($matches);
                 $routeObj = new Route($route['path'], $route['handler'][0], $route['handler'][1]);
                 $routeObj->setParameters($matches);
                 return $routeObj;
@@ -58,5 +55,4 @@ class Router
         }
         return null;
     }
-
 }

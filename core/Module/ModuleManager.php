@@ -5,11 +5,11 @@
 namespace Corelia\Module;
 
 use Corelia\Routing\Router;
+use Corelia\Routing\RouteAttribute; // <-- Utilise bien RouteAttribute ici
 use Exception;
 
 class ModuleManager
 {
-
     protected string $modulesPath;
     protected array $modules = [];
     protected array $enabledModules = [];
@@ -29,7 +29,6 @@ class ModuleManager
             $configFile = $this->modulesPath . '/' . $dir . '/config.json';
             if( file_exists( $configFile ) ){
                 $config = json_decode( file_get_contents( $configFile ), true );
-
                 if( !empty( $config['enabled'] ) ){
                     $this->modules[ $dir ] = $config;
                 }
@@ -37,9 +36,6 @@ class ModuleManager
         }
     }
 
-    /**
-     * Résout les dépendances et active uniquement les modules dont les dépendances sont satisfaites.
-     */
     protected function resolveDependencies(): void
     {
         $resolved   = [];
@@ -57,11 +53,9 @@ class ModuleManager
         $unresolved[] = $module;
         $dependencies = $this->modules[ $module ]['dependencies'] ?? [];
         foreach( $dependencies as $dep ){
-
             if( !isset( $this->modules[ $dep ] ) ){
                 throw new Exception("Le module $module dépend du module $dep qui n'est pas activé.");
             }
-
             if( !in_array( $dep, $resolved ) ){
                 if( in_array( $dep, $unresolved ) ){
                     throw new Exception("Dépendance circulaire détectée entre $module et $dep.");
@@ -69,16 +63,12 @@ class ModuleManager
                 $this->resolve( $dep, $resolved, $unresolved );
             }
         }
-
         if( !in_array( $module, $resolved ) ){
             $resolved[] = $module;
         }
         unset( $unresolved[ array_search( $module, $unresolved ) ] );
     }
 
-    /**
-     * Retourne la liste ordonnée des modules activés (avec dépendances résolues).
-     */
     public function getEnabledModules(): array
     {
         return $this->enabledModules;
@@ -86,17 +76,42 @@ class ModuleManager
 
     /**
      * Charge les routes de tous les modules activés dans le routeur.
+     * Compatible config.json ET attributs #[RouteAttribute]
      */
-    public function registerModulesRoutes( Router $router ): void
+    public function registerModulesRoutes(Router $router): void
     {
-        foreach( $this->enabledModules as $module ){
-            $config = $this->modules[ $module ];
-            if( !empty( $config['routes'] ) ){
-                foreach( $config['routes'] as $route ){
-                    $router->add( $route['method'], $route['path'], $route['handler'] );
+        foreach ($this->enabledModules as $module) {
+            $config = $this->modules[$module];
+
+            // 1. Routes déclarées dans config.json (compatibilité)
+            if (!empty($config['routes'])) {
+                foreach ($config['routes'] as $route) {
+                    $router->add($route['method'], $route['path'], $route['handler']);
+                }
+            }
+
+            // 2. Découverte automatique via attributs #[RouteAttribute]
+            // Suppose que les contrôleurs sont dans le namespace Modules\{Module}\*
+            $controllersPath = __DIR__ . "/../../modules/$module/";
+            foreach (glob($controllersPath . '*Controller.php') as $file) {
+                $className = "Modules\\$module\\" . basename($file, '.php');
+                if (!class_exists($className)) {
+                    require_once $file;
+                }
+                if (!class_exists($className)) continue;
+
+                $rc = new \ReflectionClass($className);
+                foreach ($rc->getMethods() as $method) {
+                    foreach ($method->getAttributes(RouteAttribute::class) as $attr) {
+                        $routeAttr = $attr->newInstance();
+                        $router->add(
+                            $routeAttr->methods,
+                            $routeAttr->path,
+                            [$className, $method->getName()]
+                        );
+                    }
                 }
             }
         }
     }
-
 }
