@@ -4,19 +4,26 @@
 
 namespace Corelia;
 
+use Corelia\Event\EventDispatcher;
+use Corelia\Module\ModuleManager;
 use Corelia\Http\Request;
 use Corelia\Http\Response;
+use Corelia\Routing\Router;
+
 
 class Kernel
 {
     protected array $config = [];
-    protected array $modules = [];
-    protected string $routerPath = '';
+    protected ModuleManager $moduleManager;
+    protected EventDispatcher $eventDispatcher;
 
     public function __construct()
     {
         $this->loadEnv();
-        $this->loadModules();
+
+        // Initialise le gestionnaire de modules et le dispatcher d'évènements
+        $this->moduleManager    = new ModuleManager( __DIR__ . '/../modules' );
+        $this->eventDispatcher  = new EventDispatcher();
     }
 
     /** 
@@ -45,30 +52,6 @@ class Kernel
     }
 
     /**
-     * Charge les modules actifs en scannant les fichiers 'config.json' de chaques modules
-     */
-    protected function loadModules(): void
-    {
-        $modulesPath = __DIR__ . '/../modules';
-
-        if( !is_dir( $modulesPath ) ){
-            return;
-        }
-
-        $dirs = scandir( $modulesPath );
-        foreach( $dirs as $dir ){
-            if( $dir === '.' || $dir === '..' ) continue;
-            $configFile = $modulesPath . '/' . $dir . '/config.json';
-            if( file_exists( $configFile ) ){
-                $config = json_decode( file_get_contents( $configFile ), true );
-                if( !empty( $config['enabled'] ) ){
-                    $this->modules[$dir] = $config;
-                }
-            }
-        }
-    }
-
-    /**
      * Point d'entrée principal : Traite la requête HTTP
      */
     public function handle(): void
@@ -77,8 +60,14 @@ class Kernel
         $request    = new Request();
         $response   = new Response();
                 
-        // Chargement du routeur et des routes
-        $router = require realpath(__DIR__ . '/../src/routes.php');
+        // Création du routeur
+        $router = new Router();
+
+        // Enregistre dynamiquement toutes les routes de smodules activés (avec dépendances résolues)
+        $this->moduleManager->registerModulesRoutes( $router );
+        
+        // Ajout éventuellement ici les routes "app" (hors modules) si besoins
+
         $match = $router->match( $request );
                     
         if ($match) {
@@ -88,6 +77,11 @@ class Kernel
 
             if ( class_exists( $controllerClass ) ) {
                 $controller = new $controllerClass();
+
+                // Injection du dispatcher si la méthode existe dans le contrôleur
+                if( method_exists( $controller, 'setEventDispatcher' ) ){
+                    $controller->setEventDispatcher($this->eventDispatcher);
+                }
 
                 if ( method_exists( $controller, $method ) ) {
                     ob_start();
@@ -120,5 +114,21 @@ class Kernel
                     <p>Pour commencer, créez votre premier contrôleur dans :</p>
                     <pre><code>/src/Controller</code></pre>";
         }
+    }
+
+    /**
+     * Permet d'accéder au gestionnaire d'événements global
+     */
+    public function getEventDispatcher(): EventDispatcher
+    {
+        return $this->eventDispatcher;
+    }
+
+    /**
+     * Permet d'accéder au gestionnaire de modules
+     */
+    public function getModuleManager(): ModuleManager
+    {
+        return $this->moduleManager;
     }
 }

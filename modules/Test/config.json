@@ -2,6 +2,7 @@
   "name": "Test",
   "description": "Module Test généré automatiquement",
   "enabled": true,
+  "dependencies":[],
   "autoload": {
     "psr-4": {
       "Modules\\Test\\": "modules/Test/"

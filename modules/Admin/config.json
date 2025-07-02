@@ -2,6 +2,7 @@
     "name": "Admin",
     "description": "Module d'administration",
     "enabled": true,
+    "dependencies":[],
     "autoload": {
         "psr-4": {
             "Modules\\Admin\\": "modules\/Admin\/"
