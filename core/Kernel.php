@@ -4,6 +4,9 @@
 
 namespace Corelia;
 
+use Corelia\Http\Request;
+use Corelia\Http\Response;
+
 class Kernel
 {
     protected array $config = [];
@@ -68,8 +71,11 @@ class Kernel
      */
     public function handle(): void
     {
-        $uri    = $_SERVER['REQUEST_URI'] ?? '/';
-        $path   = parse_url( $uri, PHP_URL_PATH );
+        
+        $request    = new Request();
+        $response   = new Response();
+        
+        $path   = parse_url( $request->uri(), PHP_URL_PATH );
         
         // Simple routing : /controller/method/params
         $segments       = array_filter( explode('/', $path) );
@@ -81,36 +87,44 @@ class Kernel
         $controllerClass = "App\\Controller\\$controllerName";
 
         if( !class_exists( $controllerClass ) ){
-            // Aucun contrôleur trouvé : Afficher page d'accueil par défaut
-            $this->renderWelcomePage();
+            $response->setStatusCode(200);
+            $response->setContent( $this->renderWelcomePage() );
+            $response->send();
             return;
         }
 
         $controller = new $controllerClass();
 
         if( !method_exists( $controller, $method ) ){
-            header("HTTP/1.0 404 Nout Found");
-            echo "Méthode '$method' introuvable dans le contrôleur '$controllerName'.";
+            $response->setStatusCode( 404 );
+            $response->setContent("Méthode '$method' introuvable dans le contrôleur '$controllerName'.");
+            $response->send();
             return;
         }
 
         // Appel de la méthode avec paramètres
-        call_user_func_array( [ $controller, $method ], $params );
+        ob_start();
+        call_user_func_array( [$controller, $method], $params );
+        $content = ob_get_clean();
+        
+        $response->setStatusCode( 200 );
+        $response->setContent( $content );
+        $response->send();
     }
 
     /**
      * Affiche la page d'accueil par défaut quand aucun contrôleur n'est trouvé
      */
-    protected function renderWelcomePage(): void
+    protected function renderWelcomePage(): string
     {
         $welcomeView = __DIR__ . '/../../src/Views/welcome.ctpl';
         if( file_exists( $welcomeView ) ){
-            echo file_get_contents( $welcomeView );
+            return file_get_contents( $welcomeView );
         }else{
-            echo "<h1>Bienvenue sur CoreliaPHP</h1>";
-            echo "<p>Le framework est correctement installé.</p>";
-            echo "<p>Pour commencer, créez votre premier contrôleur dans :</p>";
-            echo "<pre><code>/src/Controller</code></pre>";
+            return "<h1>Bienvenue sur CoreliaPHP</h1>
+                    <p>Le framework est correctement installé.</p>
+                    <p>Pour commencer, créez votre premier contrôleur dans :</p>
+                    <pre><code>/src/Controller</code></pre>";
         }
     }
 }
