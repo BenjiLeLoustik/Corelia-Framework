@@ -1,0 +1,17 @@
+{
+  "name": "Test",
+  "description": "Module Test généré automatiquement",
+  "enabled": true,
+  "autoload": {
+    "psr-4": {
+      "Modules\\Test\\": "modules/Test/"
+    }
+  },
+  "routes": [
+    {
+      "method": "GET",
+      "path": "/test",
+      "handler": ["Modules\\Test\\TestController", "index"]
+    }
+  ]
+}

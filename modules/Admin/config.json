@@ -10,7 +10,7 @@
     "routes": [
         {
             "method": "GET",
-            "path": "\/admin",
+            "path": "/admin",
             "handler": [
                 "Modules\\Admin\\AdminController",
                 "dashboard"

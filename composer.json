@@ -6,7 +6,7 @@
         "psr-4": {
             "Corelia\\": "core/",
             "App\\": "src/",
-            "Modules\\Admin\\": "modules/Admin/"
+            "Modules\\": "modules/"
         }
     },
     "require": {}

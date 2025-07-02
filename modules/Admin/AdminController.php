@@ -17,9 +17,7 @@ class AdminController
      */
     public function dashboard()
     {
-        echo "Dashboard admin OK";
-        exit;
-        /* $modules    = $this->getModules();
+        $modules    = $this->getModules();
         $listHtml   = '';
         foreach( $modules as $name => $enabled ){
             $status     = $enabled ? 'Activé' : 'Désactivé';
@@ -32,7 +30,7 @@ class AdminController
             'title'     => 'Tableau de bord Admin',
             'modules'   => $listHtml,
             'year'      => date('Y')
-        ]); */
+        ]);
     }
 
     /**
