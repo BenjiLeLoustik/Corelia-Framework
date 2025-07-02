@@ -7,7 +7,8 @@ namespace Corelia\Routing;
 use Corelia\Http\Request;
 
 /**
- * Gestionnaire des routes
+ * Routeur HTTP pour CoreliaPHP.
+ * Permet d'ajouter et de matcher des routes avec méthodes et paramètres.
  */
 class Router
 {
@@ -15,36 +16,46 @@ class Router
     protected array $routes = [];
 
     /**
-     * Ajoute une route
+     * Ajoute une route.
+     * @param string $method HTTP method (GET, POST, etc.)
+     * @param string $path   Chemin avec ou sans paramètres (ex: /blog/{id})
+     * @param array  $handler [Classe, méthode]
      */
-    public function add( string $path, string $controller, string $method = 'index' ): self
+    public function add( string $method, string $path, array $handler ): self
     {
-        $this->routes[ $path ] = new Route( $path, $controller, $method );
+        // Normalisation du chemin
+        $path = '/' . trim( $path, '/' );
+        $this->routes[] = [
+            'method'    => $method,
+            'path'      => $path,
+            'handler'   => $handler
+        ];
         return $this;
     }
 
+    /**
+     * Tente de trouver une route correspondant à la requête.
+     */
     public function match( Request $request ): ?Route
     {
-        $uri = parse_url( $request->uri(), PHP_URL_PATH );
-        $uri = rtrim( $uri, '/' );
+        $reqMethod = strtoupper($request->method());
+        $reqPath = '/' . trim(parse_url($request->uri(), PHP_URL_PATH), '/');
 
-        // Recherche simple (exacte)
-        if( isset( $this->routes[ $uri ] ) ){
-            return $this->routes[ $uri ];
-        }
+        foreach ($this->routes as $route) {
+            if ($route['method'] !== $reqMethod) continue;
 
-        // Recherche avec paramètres (ex: /blog/show/123)
-        foreach( $this->routes as $route ){
-            $pattern = preg_replace('#\{[a-zA-Z_]+\}#', '([^/]+)', $route->getPath() );
+            $pattern = preg_replace('#\{[a-zA-Z_][a-zA-Z0-9_]*\}#', '([^/]+)', $route['path']);
             $pattern = '#^' . $pattern . '$#';
 
-            if( preg_match( $pattern, $uri, $matches ) ) {
-                array_shift( $matches );
-                $route->setParameters( $matches );
-                return $route;
+            if (preg_match($pattern, $reqPath, $matches)) {
+                array_shift($matches); // Retire la chaîne complète
+
+                // Crée une instance de Route avec les bons paramètres
+                $routeObj = new Route($route['path'], $route['handler'][0], $route['handler'][1]);
+                $routeObj->setParameters($matches);
+                return $routeObj;
             }
         }
-
         return null;
     }
 

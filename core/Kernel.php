@@ -74,42 +74,34 @@ class Kernel
         
         $request    = new Request();
         $response   = new Response();
-        
-        $path   = parse_url( $request->uri(), PHP_URL_PATH );
-        
-        // Simple routing : /controller/method/params
-        $segments       = array_filter( explode('/', $path) );
-        $controllerName = !empty( $segments ) ? ucfirst( array_shift( $segments ) ) . 'Controller' : 'HomeController';
-        $method         = !empty( $segments ) ? array_shift( $segments ) : 'index';
-        $params         = $segments;
+                
+        // Chargement du routeur et des routes
+        $router = require __DIR__ . '/../../src/routes.php';
+        $match = $router->match( $request );
 
-        // Recherche du contrôleur dans /src/Controllers
-        $controllerClass = "App\\Controller\\$controllerName";
+        if ($match) {
+            $controllerClass    = $match->getController();
+            $method             = $match->getMethod();
+            $params             = $match->getParameters();
 
-        if( !class_exists( $controllerClass ) ){
-            $response->setStatusCode(200);
-            $response->setContent( $this->renderWelcomePage() );
-            $response->send();
+            if ( class_exists( $controllerClass ) ) {
+                $controller = new $controllerClass();
+
+                if ( method_exists( $controller, $method ) ) {
+                    ob_start();
+                    call_user_func_array( [ $controller, $method ], $params );
+                    $content = ob_get_clean();
+                    $response->setStatusCode( 200 )->setContent( $content )->send();
+                    return;
+                }
+
+            }
+            $response->setStatusCode( 404 )->setContent( "Contrôleur ou méthode introuvable." )->send();
             return;
         }
 
-        $controller = new $controllerClass();
-
-        if( !method_exists( $controller, $method ) ){
-            $response->setStatusCode( 404 );
-            $response->setContent("Méthode '$method' introuvable dans le contrôleur '$controllerName'.");
-            $response->send();
-            return;
-        }
-
-        // Appel de la méthode avec paramètres
-        ob_start();
-        call_user_func_array( [$controller, $method], $params );
-        $content = ob_get_clean();
-        
-        $response->setStatusCode( 200 );
-        $response->setContent( $content );
-        $response->send();
+        // Fallback : page d'accueil par défaut
+        $response->setStatusCode( 200 )->setContent( $this->renderWelcomePage() )->send();
     }
 
     /**
