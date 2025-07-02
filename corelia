@@ -1,0 +1,7 @@
+#!/usr/bin/env php
+<?php
+
+/* ===== CoreliaPHP - CLI ===== */
+
+echo "Bienvenue sur la CLI CoreliaPHP\n";
+// À compléter dans les étapes suivantes

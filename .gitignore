@@ -1,0 +1,8 @@
+/vendor/
+/uploads/
+/.env
+/core/Cache/
+/core/Template/Cache/
+/core/Cache/Template/
+/corelia.lock
+.DS_Store
