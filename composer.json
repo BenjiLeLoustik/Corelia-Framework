@@ -5,7 +5,8 @@
     "autoload": {
         "psr-4": {
             "Corelia\\": "core/",
-            "App\\": "src/"
+            "App\\": "src/",
+            "Modules\\Admin\\": "modules/Admin/"
         }
     },
     "require": {}

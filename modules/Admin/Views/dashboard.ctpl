@@ -1,0 +1,7 @@
+<!-- ===== /modules/Admin/Views/dashboard.ctpl ===== -->
+
+<h2>Tableau de bord</h2>
+<p>Liste des modules :</p>
+<ul>
+    {modules_list}
+</ul>

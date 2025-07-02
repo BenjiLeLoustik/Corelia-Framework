@@ -11,6 +11,7 @@ class Kernel
 {
     protected array $config = [];
     protected array $modules = [];
+    protected string $routerPath = '';
 
     public function __construct()
     {
@@ -48,7 +49,8 @@ class Kernel
      */
     protected function loadModules(): void
     {
-        $modulesPath = __DIR__ . '/../../modules';
+        $modulesPath = __DIR__ . '/../modules';
+
         if( !is_dir( $modulesPath ) ){
             return;
         }
@@ -76,9 +78,9 @@ class Kernel
         $response   = new Response();
                 
         // Chargement du routeur et des routes
-        $router = require __DIR__ . '/../../src/routes.php';
+        $router = require realpath(__DIR__ . '/../src/routes.php');
         $match = $router->match( $request );
-
+                    
         if ($match) {
             $controllerClass    = $match->getController();
             $method             = $match->getMethod();

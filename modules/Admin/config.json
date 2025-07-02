@@ -1,0 +1,17 @@
+{
+  "name": "Admin",
+  "description": "Module d'administration",
+  "enabled": true,
+  "autoload": {
+    "psr-4": {
+      "Modules\\Admin\\": "modules/Admin/"
+    }
+  },
+  "routes": [
+    {
+      "method": "GET",
+      "path": "/admin",
+      "handler": ["Modules\\Admin\\AdminController", "dashboard"]
+    }
+  ]
+}
