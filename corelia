@@ -32,6 +32,12 @@ switch( $command ){
     case 'module:disable':
         $manager->disable( $argv[2] ?? null );
         break;
+    case 'make:module':
+        ( new \Corelia\CLI\Generator( __DIR__ ) )->makeModule( $argv[2] ?? null );
+        break;
+    case 'make:controller':
+        ( new \Corelia\CLI\Generator( __DIR__ ) )->makeController( $argv[2] ?? null, $argv[3] ?? null );
+        break;
     default: 
         echo "Commande inconnue.\n";
 }
