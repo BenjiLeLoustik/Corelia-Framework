@@ -1,0 +1,24 @@
+<!-- /src/Views/welcome.ctpl -->
+
+<h1>CoreliaPHP est installé !</h1>
+<p>Le framework fonctionne correctement.</p>
+<p>Pour créer votre première page :</p>
+<ol>
+    <li>Créez un fichier <code>HomeController.php</code> dans <code>/src/Controller</code>.</li>
+    <li>Ajouter une méthode <code>index()</code> à ce controlleur.</li>
+    <li>Créez un template associé dans <code>/src/Views/Home/inde.ctpl</code>.</li>
+</ol>
+<p>Exemple de contrôleur :</p>
+<pre>
+    <code class="php">
+        &lt;?php
+        namespace App\Controller;
+        class HomeController 
+        {
+            public function index()
+            {
+                echo "Bienvenue sur votre première page !";
+            }
+        }
+    </code>
+</pre>

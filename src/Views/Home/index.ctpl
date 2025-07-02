@@ -1,0 +1,10 @@
+<!-- /src/Views/Home/index.ctpl -->
+
+<h1>Bienvenue sur CoreliaPHP !</h1>
+<p>
+    Vous voyez cette page car le contrôleur <code>HomeController</code> et la méthode
+    <code>index</code> éxistent.
+</p>
+<p>
+    Modifier ce fichier pour personnaliser votre page d'accueil.
+</p>
