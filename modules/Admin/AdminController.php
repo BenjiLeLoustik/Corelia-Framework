@@ -4,51 +4,22 @@
 
 namespace Modules\Admin;
 
-use Corelia\Template\CoreliaTemplate;
+use Corelia\Controller\BaseController;
+use Corelia\Routing\RouteAttribute;
 
 /**
  * Contrôleur principal du module admin
  */
-class AdminController
+class AdminController extends BaseController
 {
-
     /**
      * Affiche le tableau de bord de l'administration
+     * (rendu template via annotation)
      */
-    public function dashboard()
+    #[RouteAttribute(path: '/admin', template: 'Admin::dashboard.ctpl')]
+    public function dashboard(): array
     {
-        $modules    = $this->getModules();
-        $listHtml   = '';
-        foreach( $modules as $name => $enabled ){
-            $status     = $enabled ? 'Activé' : 'Désactivé';
-            $listHtml   .= "<li>$name: $status</li>";
-        }
-
-        $tpl = new CoreliaTemplate( __DIR__ . '/Views/dashboard.ctpl' );
-        $tpl->setLayout( __DIR__ . '/Views/base.ctpl' );
-        echo $tpl->render([
-            'title'     => 'Tableau de bord Admin',
-            'modules'   => $listHtml,
-            'year'      => date('Y')
-        ]);
-    }
-
-    /**
-     * Récupère la liste des modules actifs et inactifs
-     */
-    public function getModules(): array
-    {
-        $modulesPath = __DIR__ . '/../';
-        $modules = [];
-        foreach (scandir($modulesPath) as $dir) {
-            if ($dir === '.' || $dir === '..') continue;
-            $configFile = $modulesPath . $dir . '/config.json';
-            if (file_exists($configFile)) {
-                $config = json_decode(file_get_contents($configFile), true);
-                $modules[$dir] = $config['enabled'] ?? false;
-            }
-        }
-        return $modules;
+        return ['theme' => 'dark'];
     }
 
 }

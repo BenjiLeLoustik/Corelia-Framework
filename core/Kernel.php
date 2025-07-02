@@ -8,8 +8,10 @@ use Corelia\Event\EventDispatcher;
 use Corelia\Module\ModuleManager;
 use Corelia\Http\Request;
 use Corelia\Http\Response;
+use Corelia\Http\JsonResponse;
 use Corelia\Routing\RouteAttribute;
 use Corelia\Routing\Router;
+use Corelia\Template\CoreliaTemplate;
 
 class Kernel
 {
@@ -101,12 +103,42 @@ class Kernel
                 }
 
                 if (method_exists($controller, $method)) {
+                    // Récupère les attributs de la méthode pour gérer template/JSON
+                    $reflection = new \ReflectionMethod($controllerClass, $method);
+                    $routeAttrs = $reflection->getAttributes(RouteAttribute::class);
+
+                    $template = null;
+                    $responseType = null;
+                    if ($routeAttrs) {
+                        $routeAttr = $routeAttrs[0]->newInstance();
+                        $template = $routeAttr->template ?? null;
+                        $responseType = $routeAttr->response ?? null;
+                    }
+
                     $result = call_user_func_array([$controller, $method], $params);
 
-                    if ($result instanceof \Corelia\Http\Response) {
+                    // Si un template est défini et que la méthode retourne un tableau, on fait le rendu
+                    if ($template && is_array($result)) {
+                        $templatePath = $this->resolveTemplatePath($template);
+                        $tpl = new CoreliaTemplate($templatePath);
+                        echo $tpl->render($result);
+                        return;
+                    }
+
+                    // Si une réponse JSON est demandée et que la méthode retourne un tableau
+                    if ($responseType === 'jsonResponse' && is_array($result)) {
+                        $json = new JsonResponse($result);
+                        $json->send();
+                        return;
+                    }
+
+                    // Si le contrôleur retourne un objet Response (ou hérité), on l'envoie
+                    if ($result instanceof Response) {
                         $result->send();
                         return;
                     }
+
+                    // Sinon, on considère que c'est du contenu brut
                     $response->setStatusCode(200)->setContent((string)$result)->send();
                     return;
                 } else {
@@ -121,6 +153,20 @@ class Kernel
 
         // Fallback : page d'accueil par défaut
         $response->setStatusCode(200)->setContent($this->renderWelcomePage())->send();
+    }
+
+    /**
+     * Résout le chemin absolu du template selon la convention.
+     */
+    protected function resolveTemplatePath(string $template): string
+    {
+        if (strpos($template, '::') !== false) {
+            // Template module : ex 'Admin::dashboard.ctpl'
+            [$module, $tpl] = explode('::', $template, 2);
+            return __DIR__ . "/../modules/{$module}/Views/{$tpl}";
+        }
+        // Template app : ex 'welcome.ctpl'
+        return __DIR__ . "/../src/Views/{$template}";
     }
 
     protected function renderWelcomePage(): string

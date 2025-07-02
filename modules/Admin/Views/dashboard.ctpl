@@ -1,7 +1,11 @@
 <!-- ===== /modules/Admin/Views/dashboard.ctpl ===== -->
 
-<h2>Tableau de bord</h2>
-<p>Liste des modules :</p>
-<ul>
-    {modules}
-</ul>
+{% block title %}Dashboard | Administration CoreliaPHP{% endblock %}
+
+{% block content %}
+    <h1>Dashboard</h1>
+    <div class="card">
+        <p>Bienvenue dans l'administration de CoreliaPHP.</p>
+        <p>Utilisez le menu pour gérer vos modules, routes et paramètres.</p>
+    </div>
+{% endblock %}
