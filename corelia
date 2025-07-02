@@ -3,5 +3,35 @@
 
 /* ===== CoreliaPHP - CLI ===== */
 
-echo "Bienvenue sur la CLI CoreliaPHP\n";
-// À compléter dans les étapes suivantes
+require __DIR__ . '/vendor/autoload.php';
+
+use Corelia\CLI\ModuleManager;
+
+$argv = $_SERVER['argv'];
+$argc = $_SERVER['argc'];
+
+if( $argc < 2 ){
+    echo "Usage : php corelia <commande> [options]\n";
+    echo "Commande(s) disponible(s):\n";
+    echo "  - module:list               list les modules.\n";
+    echo "  - module:enable <module>    Active un module.\n";
+    echo "  - module:disabled <module>  Désactive un module. \n";
+    exit(1);
+}
+
+$command = $argv[1];
+$manager = new ModuleManager( __DIR__ . '/modules' );
+
+switch( $command ){
+    case 'module:list':
+        $manager->list();
+        break;
+    case 'module:enable':
+        $manager->enable( $argv[2] ?? null );
+        break;
+    case 'module:disable':
+        $manager->disable( $argv[2] ?? null );
+        break;
+    default: 
+        echo "Commande inconnue.\n";
+}
