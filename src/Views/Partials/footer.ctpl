@@ -1,0 +1,5 @@
+<!-- /src/Views/Partials/footer.ctpl -->
+
+<footer>
+    <p>&copy; {year} CoreliaPHP</p>
+</footer>

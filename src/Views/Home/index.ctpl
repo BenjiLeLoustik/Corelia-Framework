@@ -1,6 +1,6 @@
 <!-- /src/Views/Home/index.ctpl -->
 
-<h1>Bienvenue sur {framework} !</h1>
+<h2>Bienvenue sur {framework} !</h2>
 <p>
     Bonjour {nom}, vous voyez cette page car le contrôleur <code>HomeController</code>
     et la méthode <code>index</code> existent.

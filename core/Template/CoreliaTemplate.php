@@ -14,10 +14,20 @@ class CoreliaTemplate
 {
 
     protected string $templatePath;
+    protected ?string $layoutPath = null;
 
     public function __construct( string $templatePath )
     {
         $this->templatePath = $templatePath;
+    }
+
+    /**
+     * Définit un layout à utiliser pour ce rendu.
+     */
+    public function setLayout( string $layoutPath ): self
+    {
+        $this->layoutPath = $layoutPath;
+        return $this;
     }
 
     /**
@@ -26,17 +36,36 @@ class CoreliaTemplate
      */
     public function render( array $vars = [] ): string
     {
-        if (!file_exists($this->templatePath)) {
-            return "<!-- Template non trouvé : {$this->templatePath} -->";
+        $content = $this->renderFile($this->templatePath, $vars);
+
+        if ($this->layoutPath && file_exists($this->layoutPath)) {
+            // On injecte $content dans le layout via la variable {content}
+            $vars['content'] = $content;
+            return $this->renderFile($this->layoutPath, $vars);
         }
+        return $content;
+    }
 
-        $output = file_get_contents($this->templatePath);
+    /**
+     * Rendu d'un fichier template avec variables.
+     */
+    public function renderFile( string $file, array $vars ): string
+    {
+        if (!file_exists($file)) {
+            return "<!-- Template non trouvé : $file -->";
+        }
+        $output = file_get_contents($file);
 
-        // Remplacement simple des variables {var}
+        // Inclusion de partials : {include:partials/header.ctpl}
+        $output = preg_replace_callback('/\{include:([^\}]+)\}/', function ($matches) use ($vars) {
+            $partialPath = dirname($this->templatePath) . '/' . $matches[1];
+            return $this->renderFile($partialPath, $vars);
+        }, $output);
+
+        // Remplacement des variables {var}
         foreach ($vars as $key => $value) {
-            $output = str_replace('{' . $key . '}', htmlspecialchars((string)$value), $output);
+            $output = str_replace('{' . $key . '}', $value, $output);
         }
-
         return $output;
     }
 
