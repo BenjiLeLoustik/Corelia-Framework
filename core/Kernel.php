@@ -20,7 +20,7 @@ class Kernel
      */
     protected function loadEnv(): void
     {
-        $envFile = __DIR__ . '/../../.env';
+        $envFile = __DIR__ . '/../.env';
         if( !file_exists( $envFile ) ){
             throw new \RuntimeException('.env file not found');
         }
@@ -66,7 +66,7 @@ class Kernel
     /**
      * Point d'entrée principal : Traite la requête HTTP
      */
-    public function handler(): void
+    public function handle(): void
     {
         $uri    = $_SERVER['REQUEST_URI'] ?? '/';
         $path   = parse_url( $uri, PHP_URL_PATH );
