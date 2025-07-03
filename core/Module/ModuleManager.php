@@ -8,13 +8,44 @@ use Corelia\Routing\Router;
 use Corelia\Routing\RouteAttribute; // <-- Utilise bien RouteAttribute ici
 use Exception;
 
+/**
+ * Gestionnaire des modules Corelia.
+ * Permet de charger la configuration des modules, de résoudre les dépendances,
+ * et d'enregistrer dynamiquement les routes des modules dans le routeur.
+ */
 class ModuleManager
 {
+    
+    /**
+     * Chemin vers le dossier des modules.
+     * @var string
+     */
     protected string $modulesPath;
+
+    /**
+     * Tableau associatif des modules activés avec leur configuration.
+     * @var array
+     */
     protected array $modules = [];
+
+    /**
+     * Liste ordonnée des modules activés (après résolution des dépendances).
+     * @var array
+     */
     protected array $enabledModules = [];
+
+    /**
+     * Liste des modules effectivement chargés (optionnel, pour extensions futures).
+     * @var array
+     */
     protected array $loadedModules = [];
 
+    /**
+     * Constructeur.
+     * Charge la configuration des modules et résout les dépendances.
+     *
+     * @param string $modulesPath           Chemin du dossier des modules
+     */
     public function __construct( string $modulesPath )
     {
         $this->modulesPath = $modulesPath;
@@ -22,6 +53,10 @@ class ModuleManager
         $this->resolveDependencies();
     }
 
+    /**
+     * Charge la configuration (config.json) de tous les modules activés.
+     * Remplit la propriété $modules.
+     */
     protected function loadModulesConfig(): void
     {
         foreach( scandir( $this->modulesPath ) as $dir ){
@@ -36,6 +71,11 @@ class ModuleManager
         }
     }
 
+    /**
+     * Résout l'ordre de chargement des modules selon leurs dépendances.
+     * Remplit la propriété $enabledModules.
+     * Lance une exception en cas de dépendance manquante ou circulaire.
+     */
     protected function resolveDependencies(): void
     {
         $resolved   = [];
@@ -48,6 +88,13 @@ class ModuleManager
         $this->enabledModules = $resolved;
     }
 
+    /**
+     * Résolution récursive des dépendances pour un module donné.
+     * @param string $module                Nom du module à résoudre
+     * @param array  $resolved              Liste des modules déjà résolus (par référence)
+     * @param array  $unresolved            Liste des modules en cours de résolution (par référence)
+     * @throws                              Exception si dépendance manquante ou circulaire
+     */
     protected function resolve( string $module, array &$resolved, array &$unresolved ): void
     {
         $unresolved[] = $module;
@@ -69,14 +116,20 @@ class ModuleManager
         unset( $unresolved[ array_search( $module, $unresolved ) ] );
     }
 
+    /**
+     * Retourne la liste ordonnée des modules activés.
+     * @return array
+     */
     public function getEnabledModules(): array
     {
         return $this->enabledModules;
     }
 
     /**
-     * Charge les routes de tous les modules activés dans le routeur.
-     * Compatible config.json ET attributs #[RouteAttribute]
+     * Enregistre les routes de tous les modules activés dans le routeur.
+     * Prend en charge les routes déclarées dans config.json et les attributs #[RouteAttribute].
+     *
+     * @param Router $router                Instance du routeur Corelia
      */
     public function registerModulesRoutes(Router $router): void
     {

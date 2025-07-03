@@ -11,12 +11,28 @@ namespace Corelia\Http;
 class Response
 {
 
+    /**
+     * Code HTTP de la réponse (ex: 200, 404, 500)
+     * @var int
+     */
     protected int $statusCode = 200;
+
+    /**
+     * Tableau associatif des headers HTTP à envoyer
+     * @var array
+     */
     protected array $headers = [];
+
+    /**
+     * Contenu de la réponse (HTML, JSON, etc.)
+     * @var string
+     */
     protected string $content = '';
 
     /**
-     * Définit le code HTTP de la réponse
+     * Définit le code HTTP de la réponse.
+     * @param int $code             Code HTTP (ex: 200, 404)
+     * @return self
      */
     public function setStatusCode( int $code ): self
     {
@@ -26,7 +42,10 @@ class Response
     }
 
     /**
-     * Ajoute un header HTTP
+     * Ajoute un header HTTP à la réponse.
+     * @param string $name          Nom du header (ex: Content-Type)
+     * @param string $value         Valeur du header
+     * @return self
      */
     public function addHeader( string $name, string $value ): self
     {
@@ -36,7 +55,9 @@ class Response
     }
 
     /**
-     * Définit le contenu de la réponse
+     * Définit le contenu de la réponse.
+     * @param string $content       Contenu à envoyer (HTML, JSON, etc.)
+     * @return self
      */
     public function setContent( string $content ): self
     {
@@ -45,7 +66,8 @@ class Response
     }
 
     /**
-     * Envoie la réponse HTTP complète (headers + contenu)
+     * Envoie la réponse HTTP complète (headers + contenu).
+     * Affiche le contenu au client.
      */
     public function send(): void
     {

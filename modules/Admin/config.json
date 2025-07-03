@@ -1,8 +1,9 @@
 {
+    "key": 3254781294,
     "name": "Admin",
     "description": "Module d'administration",
     "enabled": true,
-    "dependencies":[],
+    "dependencies": [],
     "autoload": {
         "psr-4": {
             "Modules\\Admin\\": "modules\/Admin\/"
@@ -11,7 +12,7 @@
     "routes": [
         {
             "method": "GET",
-            "path": "/admin",
+            "path": "\/admin",
             "handler": [
                 "Modules\\Admin\\AdminController",
                 "dashboard"

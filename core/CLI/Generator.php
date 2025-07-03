@@ -4,12 +4,27 @@
 
 namespace Corelia\CLI;
 
+/**
+ * Classe utilitaire pour générer des modules et des contrôleurs dans l'application Corelia.
+ */
 class Generator
 {
+    /**
+     * Chemin de base du projet (racine).
+     * @var string
+     */
     protected string $basePath;
 
+    /**
+     * Constructeur.
+     * @param string $basePath              Chemin racine du projet
+     */
     public function __construct(string $basePath) { $this->basePath = $basePath; }
 
+    /**
+     * Génère la structure d'un nouveau module avec son contrôleur et sa vue de base.
+     * @param string|null $name             Nom du module à créer
+     */
     public function makeModule(?string $name)
     {
         if( !$name ){
@@ -51,6 +66,11 @@ class Generator
         echo "Module $name généré avec succès.\n";
     }
 
+    /**
+     * Génère un contrôleur soit dans l'app principale, soit dans un module existant.
+     * @param string|null $moduleOrName     Nom du module ou du contrôleur (selon usage)
+     * @param string|null $controllerName   Nom du contrôleur (optionnel, pour module)
+     */
     public function makeController(?string $moduleOrName, ?string $controllerName = null)
     {
         // Si $controllerName est null, on crée dans l'app principale

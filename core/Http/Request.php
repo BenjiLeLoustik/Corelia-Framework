@@ -11,11 +11,34 @@ namespace Corelia\Http;
 class Request
 {
 
+    /**
+     * Données GET ($_GET)
+     * @var array
+     */
     protected array $get;
+
+    /**
+     * Données POST ($_POST)
+     * @var array
+     */
     protected array $post;
+
+    /**
+     * Données serveur ($_SERVER)
+     * @var array
+     */
     protected array $server;
+
+    /**
+     * Entêtes HTTP parsées
+     * @var array
+     */
     protected array $headers;
 
+    /**
+     * Constructeur.
+     * Initialise les propriétés à partir des superglobales PHP.
+     */ 
     public function __construct()
     {
         $this->get      = $_GET ?? [];
@@ -25,7 +48,10 @@ class Request
     }
 
     /**
-     * Récupère une variable GET
+     * Récupère une variable GET.
+     * @param string $key               Nom de la variable
+     * @param mixed  $default           Valeur par défaut si non trouvée
+     * @return mixed
      */
     public function get( string $key, $default = null )
     {
@@ -33,7 +59,10 @@ class Request
     }
 
     /**
-     * Récupère une variable POST
+     * Récupère une variable POST.
+     * @param string $key               Nom de la variable
+     * @param mixed  $default           Valeur par défaut si non trouvée
+     * @return mixed
      */
     public function post( string $key, $default = null )
     {
@@ -41,7 +70,10 @@ class Request
     }
 
     /**
-     * Récupère une variable server (ex: REQUEST_URI)
+     * Récupère une variable serveur.
+     * @param string $key               Nom de la variable serveur (ex: REQUEST_URI)
+     * @param mixed  $default           Valeur par défaut si non trouvée
+     * @return mixed
      */
     public function server( string $key, $default = null )
     {
@@ -49,7 +81,10 @@ class Request
     }
 
     /**
-     * Récupère un header HTTP
+     * Récupère un header HTTP.
+     * @param string $key               Nom du header (insensible à la casse)
+     * @param mixed  $default           Valeur par défaut si non trouvé
+     * @return mixed
      */
     public function header( string $key, $default = null )
     {
@@ -58,7 +93,8 @@ class Request
     }
 
     /**
-     * Parse les headers HTTP de $_SERVER
+     * Parse les headers HTTP à partir de $_SERVER.
+     * @return array                    Tableau associatif des headers HTTP
      */
     public function parseHeaders(): array
     {
@@ -73,7 +109,8 @@ class Request
     }
 
     /**
-     * Récupère la méthode HTTP (GET, POST, etc.)
+     * Récupère la méthode HTTP de la requête (GET, POST, etc.)
+     * @return string
      */
     public function method(): string
     {
@@ -81,7 +118,8 @@ class Request
     }
 
     /**
-     * Récupère l'URI demandée
+     * Récupère l'URI demandée dans la requête.
+     * @return string
      */
     public function uri(): string
     {

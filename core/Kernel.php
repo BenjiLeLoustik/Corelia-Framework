@@ -13,12 +13,35 @@ use Corelia\Routing\RouteAttribute;
 use Corelia\Routing\Router;
 use Corelia\Template\CoreliaTemplate;
 
+/**
+ * Noyau principal (Kernel) de Corelia.
+ * Gère l'initialisation, la configuration, le routing et l'exécution de la requête HTTP.
+ */
 class Kernel
 {
+    
+    /**
+     * Configuration chargée depuis .env
+     * @var array
+     */
     protected array $config = [];
+
+    /**
+     * Gestionnaire des modules Corelia
+     * @var ModuleManager
+     */
     protected ModuleManager $moduleManager;
+
+    /**
+     * Gestionnaire d'événements Corelia
+     * @var EventDispatcher
+     */
     protected EventDispatcher $eventDispatcher;
 
+    /**
+     * Constructeur.
+     * Initialise le noyau, charge la configuration et les services principaux.
+     */
     public function __construct()
     {
         $this->setupErrorReporting();
@@ -27,6 +50,9 @@ class Kernel
         $this->eventDispatcher  = new EventDispatcher();
     }
 
+    /**
+     * Configure le reporting des erreurs PHP.
+     */
     protected function setupErrorReporting(): void
     {
         ini_set('display_errors', 1);
@@ -34,6 +60,11 @@ class Kernel
         error_reporting(E_ALL);
     }
 
+    /**
+     * Charge les variables d'environnement depuis le fichier .env.
+     * Remplit $this->config et $_ENV.
+     * @throws                          \RuntimeException si le fichier .env est absent
+     */
     protected function loadEnv(): void
     {
         $envFile = __DIR__ . '/../.env';
@@ -54,7 +85,8 @@ class Kernel
     }
 
     /**
-     * Point d'entrée principal : Traite la requête HTTP
+     * Point d'entrée principal : traite la requête HTTP.
+     * Résout la route, exécute le contrôleur, gère le rendu et les réponses.
      */
     public function handle(): void
     {
@@ -156,7 +188,9 @@ class Kernel
     }
 
     /**
-     * Résout le chemin absolu du template selon la convention.
+     * Résout le chemin absolu d'un template selon la convention Corelia.
+     * @param string $template          Nom du template (ex: 'Admin::dashboard.ctpl')
+     * @return string                   Chemin absolu du template
      */
     protected function resolveTemplatePath(string $template): string
     {
@@ -169,6 +203,10 @@ class Kernel
         return __DIR__ . "/../src/Views/{$template}";
     }
 
+    /**
+     * Rend la page d'accueil par défaut si aucune route ne correspond.
+     * @return string                   HTML de bienvenue
+     */
     protected function renderWelcomePage(): string
     {
         $welcomeView = __DIR__ . '/../src/Views/welcome.ctpl';
@@ -187,11 +225,19 @@ class Kernel
         }
     }
 
+    /**
+     * Retourne l'EventDispatcher utilisé par le Kernel.
+     * @return EventDispatcher
+     */
     public function getEventDispatcher(): EventDispatcher
     {
         return $this->eventDispatcher;
     }
 
+    /**
+     * Retourne le ModuleManager utilisé par le Kernel.
+     * @return ModuleManager
+     */
     public function getModuleManager(): ModuleManager
     {
         return $this->moduleManager;

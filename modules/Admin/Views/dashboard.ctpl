@@ -2,552 +2,475 @@
 
 {% block style %}
 <style>
-
-  body {
-    margin: 0; 
-    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
-    background: #f0f2f5; 
-    box-sizing: border-box;
-    color: #333;
-  }
-
-  .layout {
-    display: flex;
-    min-height: 100vh;
-  }
-
-  /* Sidebar */
-  .sidebar {
-	position: fixed;
-	top: 0;
-	left: 0;
-	height: 100vh; /* plein écran verticalement */
-	min-width: 300px;
-	width: 300px;
-	background-color: #1f2937;
-	color: #e0e7ff;
-	padding: 30px 10px;
-	box-sizing: border-box;
-	display: flex;
-	flex-direction: column;
-	box-shadow: 2px 0 6px rgb(0 0 0 / 0.15);
-	overflow-y: auto; /* si le contenu dépasse */
-	z-index: 1000; /* pour être au-dessus du contenu */
+	body {
+		margin: 0;
+		font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+		background: #f0f2f5;
+		box-sizing: border-box;
+		color: #333;
 	}
-  .sidebar h2 {
-    margin-top: 0;
-    font-weight: 700;
-    font-size: 1.6rem;
-    margin-bottom: 25px;
-    border-bottom: 2px solid #4f46e5; /* indigo */
-    padding-bottom: 12px;
-    letter-spacing: 1px;
-    display: flex;
-    align-items: center;
-    gap: 10px;
-  }
-  .sidebar h2 span.emoji {
-    font-size: 28px;
-  }
-  
-  .sidebar a {
-	display: flex;
-	flex-direction: row-reverse;
-	align-items: center;
-	justify-content: space-between; /* espace entre emoji et texte */
-	padding: 12px 20px;
-	font-size: 16px;
-	color: #c7c7c7;
-	text-decoration: none;
-	border-left: 4px solid transparent;
-	transition: color 0.3s ease, border-color 0.3s ease, background-color 0.2s ease;
-	margin-bottom: 14px;
-	border-radius: 4px 0 0 4px;
-	background-color: transparent;
-	cursor: pointer;
-	gap: 10px;
-   }
 
-   .sidebar a.active {
-	color: #4f46e5; /* violet soutenu */
-	border-left-color: #4f46e5;
-	background-color: #f0f0ff;
-   }
+	.layout {
+		display: flex;
+		min-height: 100vh;
+	}
 
-   .sidebar a:not(.active):hover {
-	color: #FFFFFF;
-	background: rgba( 0, 0, 0, 0.2 );
-	border-left-color: #4f46e5;
-   }
-  
-  .sidebar a span.emoji {
-    font-size: 20px;
-	margin-top: 5px;
-  }
+	/* Sidebar */
+	.sidebar {
+		position: fixed;
+		top: 0;
+		left: 0;
+		height: 100vh;
+		/* plein écran verticalement */
+		min-width: 300px;
+		width: 300px;
+		background-color: #1f2937;
+		color: #e0e7ff;
+		padding: 30px 10px;
+		box-sizing: border-box;
+		display: flex;
+		flex-direction: column;
+		box-shadow: 2px 0 6px rgb(0 0 0 / 0.15);
+		overflow-y: auto;
+		/* si le contenu dépasse */
+		z-index: 1000;
+		/* pour être au-dessus du contenu */
+	}
 
-  /* Main content */
-  .main-content {
-	flex: 1;
-	padding: 30px 30px 40px;
-	padding-left: 340px; /* largeur sidebar + un peu de marge */
-	box-sizing: border-box;
-	display: flex;
-	flex-direction: column;
-	background: white;
-   }
+	.sidebar h2 {
+		margin-top: 0;
+		font-weight: 700;
+		font-size: 1.6rem;
+		margin-bottom: 25px;
+		border-bottom: 2px solid #4f46e5;
+		/* indigo */
+		padding-bottom: 12px;
+		letter-spacing: 1px;
+		display: flex;
+		align-items: center;
+		gap: 10px;
+	}
 
-  /* Stats blocks */
-  .stats {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-    gap: 24px;
-    margin-bottom: 30px;
-  }
-  .stat-block {
-    background: #f3f4f6;
-    border-radius: 10px;
-    padding: 20px 30px;
-    box-shadow: 0 3px 8px rgb(0 0 0 / 0.05);
-    text-align: center;
-    user-select: none;
-    transition: background-color 0.3s ease;
-  }
-  .stat-block:hover {
-    background-color: #e0e7ff;
-  }
-  .stat-block h3 {
-    margin: 0;
-    font-size: 2.4rem;
-    color: #4338ca;
-  }
-  .stat-block p {
-    margin: 8px 0 0;
-    color: #6b7280;
-    font-weight: 700;
-    font-size: 1.05rem;
-    text-transform: uppercase;
-  }
+	.sidebar h2 span.emoji {
+		font-size: 28px;
+	}
 
-  /* Filter bar */
-  .filter-bar {
-    background: #f9fafb;
-    padding: 14px 25px;
-    margin-bottom: 30px;
-    border-radius: 12px;
-    box-shadow: 0 1px 8px rgb(0 0 0 / 0.1);
-    display: flex;
-    gap: 22px;
-    align-items: center;
-    flex-wrap: wrap;
-  }
-  .filter-bar label {
-    font-weight: 600;
-    color: #374151;
-  }
-  .filter-bar select, 
-  .filter-bar input[type="text"] {
-    padding: 8px 14px;
-    border-radius: 8px;
-    border: 1.5px solid #d1d5db;
-    font-size: 1.05rem;
-    min-width: 180px;
-    transition: border-color 0.3s ease;
-  }
-  .filter-bar select:focus,
-  .filter-bar input[type="text"]:focus {
-    outline: none;
-    border-color: #4f46e5;
-    box-shadow: 0 0 8px #a5b4fc;
-  }
-  .filter-bar button {
-    background-color: #4f46e5;
-    border: none;
-    border-radius: 10px;
-    color: white;
-    padding: 10px 20px;
-    cursor: pointer;
-    font-weight: 700;
-    font-size: 1rem;
-    box-shadow: 0 3px 8px rgb(79 70 229 / 0.5);
-    transition: background-color 0.3s ease;
-  }
-  .filter-bar button:hover {
-    background-color: #4338ca;
-  }
+	.sidebar a {
+		display: flex;
+		flex-direction: row-reverse;
+		align-items: center;
+		justify-content: space-between;
+		/* espace entre emoji et texte */
+		padding: 12px 20px;
+		font-size: 16px;
+		color: #c7c7c7;
+		text-decoration: none;
+		border-left: 4px solid transparent;
+		transition: color 0.3s ease, border-color 0.3s ease, background-color 0.2s ease;
+		margin-bottom: 14px;
+		border-radius: 4px 0 0 4px;
+		background-color: transparent;
+		cursor: pointer;
+		gap: 10px;
+	}
 
-  /* Modules grid */
-  .grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
-    gap: 26px;
-    flex-grow: 1;
-  }
+	.sidebar a.active {
+		color: #4f46e5;
+		/* violet soutenu */
+		border-left-color: #4f46e5;
+		background-color: #f0f0ff;
+	}
 
-  .module-card {
-    background: #fff;
-    border: 1.5px solid #e5e7eb;
-    border-radius: 14px;
-    padding: 22px 24px;
-    box-shadow: 0 3px 9px rgb(0 0 0 / 0.06);
-    display: flex;
-    flex-direction: column;
-    justify-content: space-between;
-    height: 290px;
-    box-sizing: border-box;
-    transition: box-shadow 0.3s ease, border-color 0.3s ease;
-  }
-  .module-card:hover {
-    box-shadow: 0 6px 16px rgb(0 0 0 / 0.15);
-    border-color: #4f46e5;
-  }
-  .emoji {
-    font-size: 42px;
-    text-align: center;
-    margin-bottom: 10px;
-    user-select: none;
-  }
-  h3 {
-	display: flex;
-	flex-direction: column;
-    margin: 6px 0 6px 0;
-    text-align: center;
-    font-size: 1.35rem;
-    color: #1f2937;
-    font-weight: 700;
-  }
-  h3 small {
-    color: #6b7280;
-    font-weight: 500;
-    font-size: 0.9rem;
-    margin-left: 6px;
-  }
-  p {
-    text-align: center;
-    margin: 0;
-    font-size: 1rem;
-    color: #374151;
-    flex-grow: 1;
-    user-select: none;
-  }
-  button {
-    margin-top: 14px;
-    padding: 10px 0;
-    border: none;
-    border-radius: 10px;
-    cursor: pointer;
-    width: 100%;
-    font-size: 1.05rem;
-    font-weight: 700;
-    color: white;
-    transition: background-color 0.3s ease;
-    user-select: none;
-  }
-  .enabled-btn {
-    background-color: #10b981; /* emerald */
-  }
-  .enabled-btn:hover {
-    background-color: #059669;
-  }
-  .disabled-btn {
-    background-color: #ef4444; /* red-500 */
-  }
-  .disabled-btn:hover {
-    background-color: #b91c1c;
-  }
-  .available-btn {
-    background-color: #3b82f6; /* blue-500 */
-  }
-  .available-btn:hover {
-    background-color: #2563eb;
-  }
-  .unavailable-btn {
-    background-color: #6b7280; /* gray-500 */
-    cursor: not-allowed;
-    opacity: 0.5;
-  }
+	.sidebar a:not(.active):hover {
+		color: #FFFFFF;
+		background: rgba(0, 0, 0, 0.2);
+		border-left-color: #4f46e5;
+	}
 
-  /* Responsive tweaks */
-  @media (max-width: 900px) {
-    .sidebar {
-      display: none;
-    }
-    .main-content {
-      padding: 20px;
-    }
-    .grid {
-      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-    }
-  }
+	.sidebar a span.emoji {
+		font-size: 20px;
+		margin-top: 5px;
+	}
 
-  
+	/* Main content */
+	.main-content {
+		flex: 1;
+		padding: 30px 30px 40px;
+		padding-left: 340px;
+		/* largeur sidebar + un peu de marge */
+		box-sizing: border-box;
+		display: flex;
+		flex-direction: column;
+		background: white;
+	}
+
+	/* Stats blocks */
+	.stats {
+		display: grid;
+		grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+		gap: 24px;
+		margin-bottom: 30px;
+	}
+
+	.stat-block {
+		background: #f3f4f6;
+		border-radius: 10px;
+		padding: 20px 30px;
+		box-shadow: 0 3px 8px rgb(0 0 0 / 0.05);
+		text-align: center;
+		user-select: none;
+		transition: background-color 0.3s ease;
+	}
+
+	.stat-block:hover {
+		background-color: #e0e7ff;
+	}
+
+	.stat-block h3 {
+		margin: 0;
+		font-size: 2.4rem;
+		color: #4338ca;
+	}
+
+	.stat-block p {
+		margin: 8px 0 0;
+		color: #6b7280;
+		font-weight: 700;
+		font-size: 1.05rem;
+		text-transform: uppercase;
+	}
+
+	/* Filter bar */
+	.filter-bar {
+		background: #f9fafb;
+		padding: 14px 25px;
+		margin-bottom: 30px;
+		border-radius: 12px;
+		box-shadow: 0 1px 8px rgb(0 0 0 / 0.1);
+		display: flex;
+		gap: 22px;
+		align-items: center;
+		flex-wrap: wrap;
+	}
+
+	.filter-bar label {
+		font-weight: 600;
+		color: #374151;
+	}
+
+	.filter-bar select,
+	.filter-bar input[type="text"] {
+		padding: 8px 14px;
+		border-radius: 8px;
+		border: 1.5px solid #d1d5db;
+		font-size: 1.05rem;
+		min-width: 180px;
+		transition: border-color 0.3s ease;
+	}
+
+	.filter-bar select:focus,
+	.filter-bar input[type="text"]:focus {
+		outline: none;
+		border-color: #4f46e5;
+		box-shadow: 0 0 8px #a5b4fc;
+	}
+
+	.filter-bar button {
+		background-color: #4f46e5;
+		border: none;
+		border-radius: 10px;
+		color: white;
+		padding: 10px 20px;
+		cursor: pointer;
+		font-weight: 700;
+		font-size: 1rem;
+		box-shadow: 0 3px 8px rgb(79 70 229 / 0.5);
+		transition: background-color 0.3s ease;
+	}
+
+	.filter-bar button:hover {
+		background-color: #4338ca;
+	}
+
+	/* Modules grid */
+	.grid {
+		display: grid;
+		grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+		gap: 26px;
+		flex-grow: 1;
+	}
+
+	.module-card {
+		background: #fff;
+		border: 1.5px solid #e5e7eb;
+		border-radius: 14px;
+		padding: 22px 24px;
+		box-shadow: 0 3px 9px rgb(0 0 0 / 0.06);
+		display: flex;
+		flex-direction: column;
+		justify-content: space-between;
+		height: 290px;
+		box-sizing: border-box;
+		transition: box-shadow 0.3s ease, border-color 0.3s ease;
+	}
+
+	.module-card:hover {
+		box-shadow: 0 6px 16px rgb(0 0 0 / 0.15);
+		border-color: #4f46e5;
+	}
+
+	.emoji {
+		font-size: 42px;
+		text-align: center;
+		margin-bottom: 10px;
+		user-select: none;
+	}
+
+	h3 {
+		display: flex;
+		flex-direction: column;
+		margin: 6px 0 6px 0;
+		text-align: center;
+		font-size: 1.35rem;
+		color: #1f2937;
+		font-weight: 700;
+	}
+
+	h3 small {
+		color: #6b7280;
+		font-weight: 500;
+		font-size: 0.9rem;
+		margin-left: 6px;
+	}
+
+	p {
+		text-align: center;
+		margin: 0;
+		font-size: 1rem;
+		color: #374151;
+		flex-grow: 1;
+		user-select: none;
+	}
+
+	button {
+		margin-top: 14px;
+		padding: 10px 0;
+		border: none;
+		border-radius: 10px;
+		cursor: pointer;
+		width: 100%;
+		font-size: 1.05rem;
+		font-weight: 700;
+		color: white;
+		transition: background-color 0.3s ease;
+		user-select: none;
+	}
+
+	.enabled-btn {
+		background-color: #10b981;
+		/* emerald */
+	}
+
+	.enabled-btn:hover {
+		background-color: #059669;
+	}
+
+	.disabled-btn {
+		background-color: #ef4444;
+		/* red-500 */
+	}
+
+	.disabled-btn:hover {
+		background-color: #b91c1c;
+	}
+
+	.available-btn {
+		background-color: #3b82f6;
+		/* blue-500 */
+	}
+
+	.available-btn:hover {
+		background-color: #2563eb;
+	}
+
+	.unavailable-btn {
+		background-color: #6b7280;
+		/* gray-500 */
+		cursor: not-allowed;
+		opacity: 0.5;
+	}
+
+	/* Responsive tweaks */
+	@media (max-width: 900px) {
+		.sidebar {
+			display: none;
+		}
+
+		.main-content {
+			padding: 20px;
+		}
+
+		.grid {
+			grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+		}
+	}
 </style>
 {% endblock %}
 
 {% block content %}
+
 <div class="layout">
-  <nav class="sidebar" aria-label="Navigation principale">
-    <h2><span class="emoji">🛠️</span> Framework</h2>
-    <a href="#" class="active"><span class="emoji">🏠</span> Tableau de bord</a>
-    <a href="#"><span class="emoji">👥</span> Utilisateurs</a>
-    <a href="#"><span class="emoji">⚙️</span> Paramètres</a>
-    <a href="#"><span class="emoji">📜</span> Logs</a>
-    <a href="#"><span class="emoji">🗄️</span> Gestion BDD</a>
-	<a href="/"><span class="emoji">🔙</span> Retourner sur le site</a>
-  </nav>
-  <main class="main-content" role="main" aria-label="Contenu principal">
-    <section class="stats" aria-label="Statistiques du framework">
-      <div class="stat-block" tabindex="0">
-        <h3>12</h3>
-        <p>Modules activés</p>
-      </div>
-      <div class="stat-block" tabindex="0">
-        <h3>4</h3>
-        <p>Modules désactivés</p>
-      </div>
-      <div class="stat-block" tabindex="0">
-        <h3>9</h3>
-        <p>Modules disponibles</p>
-      </div>
-      <div class="stat-block" tabindex="0">
-        <h3>3</h3>
-        <p>Modules indisponibles</p>
-      </div>
-    </section>
 
-    <section class="filter-bar" role="search" aria-label="Filtres des modules">
-      <label for="filter-status">Filtrer par statut :</label>
-      <select id="filter-status" aria-controls="modules-list" aria-label="Filtrer par statut">
-        <option value="all">Tous</option>
-        <option value="enabled">Activés</option>
-        <option value="disabled">Désactivés</option>
-        <option value="available">Disponibles</option>
-        <option value="unavailable">Indisponibles</option>
-      </select>
+	<nav class="sidebar">
+		<h2>
+			<span class="emoji">🛠️</span>
+			Framework
+		</h2>
+		{# Tableau de bord #}
+		<a href="#" class="active">
+			<span class="emoji">🏠</span>
+			Tableau de bord
+		</a>
+		{# Paramètres #}
+		<a href="#">
+			<span class="emoji">⚙️</span>
+			Paramètres
+		</a>
+		{# Logs #}
+		<a href="#">
+			<span class="emoji">📜</span>
+			Logs
+		</a>
+		{# Gestion BDD #}
+		<a href="#">
+			<span class="emoji">🗄️</span>
+			Gestion BDD
+		</a>
+		{# Retour sur le site #}
+		<a href="/">
+			<span class="emoji">🔙</span>
+			Retourner sur le site
+		</a>
+	</nav>
 
-      <label for="filter-search" class="visually-hidden">Recherche modules</label>
-      <input type="text" id="filter-search" placeholder="Rechercher modules…" aria-label="Recherche modules" />
+	<main class="main-content">
 
-      <button id="filter-button" aria-controls="modules-list">Filtrer</button>
-    </section>
+		{# Statistiques #}
+		<section class="stats">
+			{# Stats - Modules activés #}
+			<div class="stat-block" tabindex="0">
+				<h3> {{ stats.enabled }} </h3>
+				<p>
+					Modules <br />
+					activés
+				</p>
+			</div>
+			{# Stats - Modules désactivés #}
+			<div class="stat-block" tabindex="0">
+				<h3> {{ stats.disabled }} </h3>
+				<p>
+					Modules <br />
+					désactivés
+				</p>
+			</div>
+			{# Stats - Modules Disponibles #}
+			<div class="stat-block" tabindex="0">
+				<h3> {{ stats.available }} </h3>
+				<p>
+					Modules <br />
+					disponibles
+				</p>
+			</div>
+			{# Stats - Modules Indisponibles #}
+			<div class="stat-block" tabindex="0">
+				<h3> {{ stats.unavailable }} </h3>
+				<p>
+					Modules <br />
+					indisponibles
+				</p>
+			</div>
+		</section>
 
-    <section id="modules-list" class="grid" aria-live="polite" aria-label="Liste des modules">
+		{# Modules #}
+		<section id="modules-list" class="grid">	
 
-		<div class="module-card" data-status="enabled" data-title="API REST" data-description="Fournit une API REST complète.">
-			<div class="emoji">🌐</div>
-			<h3>API REST <small>v2.3.1</small></h3>
-			<p>Fournit une API REST complète.</p>
-			<button class="enabled-btn" aria-label="Désactiver module API REST">Activé</button>
-		</div>
+			{% for key, marketplaceModule in modulesMarketplace %}
 
-		<div class="module-card" data-status="disabled" data-title="Authentification" data-description="Gère la connexion et l'inscription des utilisateurs.">
-			<div class="emoji">🔒</div>
-			<h3>Authentification <small>v1.8.0</small></h3>
-			<p>Gère la connexion et l'inscription des utilisateurs.</p>
-			<button class="disabled-btn" aria-label="Activer module Authentification">Désactivé</button>
-		</div>
+				<div class="module-card" data-title="{{ marketplaceModule.name }}"
+					data-description="{{ marketplaceModule.description }}">
+					<div class="emoji">{{ marketplaceModule.ico }}</div>
+					<h3>{{ marketplaceModule.name }}<small>{{ marketplaceModule.version }}</small></h3>
+					<p>{{ marketplaceModule.description }}</p>
+					{{ text }}
 
-		<div class="module-card" data-status="available" data-title="Cache" data-description="Module de mise en cache des pages et requêtes.">
-			<div class="emoji">⚡</div>
-			<h3>Cache <small>v1.2.5</small></h3>
-			<p>Module de mise en cache des pages et requêtes.</p>
-			<button class="available-btn" aria-label="Installer module Cache">Disponible</button>
-		</div>
+					{% if marketplaceModule.key in installedModulesByKey %}
 
-		<div class="module-card" data-status="unavailable" data-title="Analytics" data-description="Analyse et rapports d’utilisation du site.">
-			<div class="emoji">📊</div>
-			<h3>Analytics <small>v0.9.7</small></h3>
-			<p>Analyse et rapports d’utilisation du site.</p>
-			<button class="unavailable-btn" aria-label="Module Analytics non disponible" disabled>Indisponible</button>
-		</div>
+						{% if installedModules.0.enabled == true %}
+							<button class="disabled-btn" onclick="window.location.href='/modules/{{ marketplaceModule.name }}/disabled'">Desactiver le module</button>
+						{% endif %}
 
-		<div class="module-card" data-status="enabled" data-title="Email" data-description="Gestion de l’envoi d’emails transactionnels.">
-			<div class="emoji">✉️</div>
-			<h3>Email <small>v3.0.0</small></h3>
-			<p>Gestion de l’envoi d’emails transactionnels.</p>
-			<button class="enabled-btn" aria-label="Désactiver module Email">Activé</button>
-		</div>
+						{% if installedModules.0.enabled == false %}
+							<button class="enabled-btn" onclick="window.location.href='/modules/{{ marketplaceModule.name }}/enabled'">Activer le module</button>
+						{% endif %}
 
-		<div class="module-card" data-status="enabled" data-title="Logger" data-description="Enregistre les logs et erreurs système.">
-			<div class="emoji">📝</div>
-			<h3>Logger <small>v1.1.4</small></h3>
-			<p>Enregistre les logs et erreurs système.</p>
-			<button class="enabled-btn" aria-label="Désactiver module Logger">Activé</button>
-		</div>
+					{% else %}
 
-		<div class="module-card" data-status="disabled" data-title="SEO" data-description="Optimise le référencement naturel du site.">
-			<div class="emoji">🔍</div>
-			<h3>SEO <small>v2.0.3</small></h3>
-			<p>Optimise le référencement naturel du site.</p>
-			<button class="disabled-btn" aria-label="Activer module SEO">Désactivé</button>
-		</div>
+						{% if marketplaceModule.status == 'available' %}
+							<button class="available-btn" onclick="window.location.href='{{ marketplaceModule.download_url }}'">Télécharger</button>
+						{% endif %}
+						
+						{% if marketplaceModule.status == 'unavailable' %}
+							<button class="unavailable-btn">Non disponible</button>
+						{% endif %}
 
-		<div class="module-card" data-status="available" data-title="Galerie" data-description="Affiche une galerie d’images responsive.">
-			<div class="emoji">🖼️</div>
-			<h3>Galerie <small>v1.5.2</small></h3>
-			<p>Affiche une galerie d’images responsive.</p>
-			<button class="available-btn" aria-label="Installer module Galerie">Disponible</button>
-		</div>
+					{% endif %}
+					
+				</div>
 
-		<div class="module-card" data-status="unavailable" data-title="Chat" data-description="Module de chat en direct pour support client.">
-			<div class="emoji">💬</div>
-			<h3>Chat <small>v0.8.9</small></h3>
-			<p>Module de chat en direct pour support client.</p>
-			<button class="unavailable-btn" aria-label="Module Chat non disponible" disabled>Indisponible</button>
-		</div>
+			{% endfor %}
 
-		<div class="module-card" data-status="enabled" data-title="Scheduler" data-description="Planification et exécution des tâches automatisées.">
-			<div class="emoji">⏰</div>
-			<h3>Scheduler <small>v1.3.7</small></h3>
-			<p>Planification et exécution des tâches automatisées.</p>
-			<button class="enabled-btn" aria-label="Désactiver module Scheduler">Activé</button>
-		</div>
+		</section>
 
-		<div class="module-card" data-status="disabled" data-title="Backup" data-description="Sauvegarde automatique de la base de données.">
-			<div class="emoji">💾</div>
-			<h3>Backup <small>v2.1.0</small></h3>
-			<p>Sauvegarde automatique de la base de données.</p>
-			<button class="disabled-btn" aria-label="Activer module Backup">Désactivé</button>
-		</div>
-
-		<div class="module-card" data-status="available" data-title="Forum" data-description="Implémentation d’un forum communautaire.">
-			<div class="emoji">🗣️</div>
-			<h3>Forum <small>v1.0.5</small></h3>
-			<p>Implémentation d’un forum communautaire.</p>
-			<button class="available-btn" aria-label="Installer module Forum">Disponible</button>
-		</div>
-
-		<div class="module-card" data-status="unavailable" data-title="Maps" data-description="Affichage de cartes interactives géolocalisées.">
-			<div class="emoji">🗺️</div>
-			<h3>Maps <small>v0.7.4</small></h3>
-			<p>Affichage de cartes interactives géolocalisées.</p>
-			<button class="unavailable-btn" aria-label="Module Maps non disponible" disabled>Indisponible</button>
-		</div>
-
-		<div class="module-card" data-status="enabled" data-title="Notifications" data-description="Système de notifications en temps réel.">
-			<div class="emoji">🔔</div>
-			<h3>Notifications <small>v1.6.3</small></h3>
-			<p>Système de notifications en temps réel.</p>
-			<button class="enabled-btn" aria-label="Désactiver module Notifications">Activé</button>
-		</div>
-
-		<div class="module-card" data-status="disabled" data-title="Multilingue" data-description="Gestion multilingue et traduction du site.">
-			<div class="emoji">🌍</div>
-			<h3>Multilingue <small>v2.2.0</small></h3>
-			<p>Gestion multilingue et traduction du site.</p>
-			<button class="disabled-btn" aria-label="Activer module Multilingue">Désactivé</button>
-		</div>
-
-		<div class="module-card" data-status="enabled" data-title="Authentification" data-description="Gestion sécurisée des connexions utilisateur.">
-			<div class="emoji">🔐</div>
-			<h3>Authentification <small>v3.0.0</small></h3>
-			<p>Gestion sécurisée des connexions utilisateur.</p>
-			<button class="enabled-btn" aria-label="Désactiver module Authentification">Activé</button>
-		</div>
-
-		<div class="module-card" data-status="disabled" data-title="Analytics" data-description="Suivi et analyse du trafic du site.">
-			<div class="emoji">📊</div>
-			<h3>Analytics <small>v1.4.2</small></h3>
-			<p>Suivi et analyse du trafic du site.</p>
-			<button class="disabled-btn" aria-label="Activer module Analytics">Désactivé</button>
-		</div>
-
-		<div class="module-card" data-status="available" data-title="E-commerce" data-description="Gestion complète d’une boutique en ligne.">
-			<div class="emoji">🛒</div>
-			<h3>E-commerce <small>v2.1.5</small></h3>
-			<p>Gestion complète d’une boutique en ligne.</p>
-			<button class="available-btn" aria-label="Installer module E-commerce">Disponible</button>
-		</div>
-
-		<div class="module-card" data-status="unavailable" data-title="Chatbot" data-description="Assistant virtuel pour support client automatisé.">
-			<div class="emoji">🤖</div>
-			<h3>Chatbot <small>v0.9.1</small></h3>
-			<p>Assistant virtuel pour support client automatisé.</p>
-			<button class="unavailable-btn" aria-label="Module Chatbot non disponible" disabled>Indisponible</button>
-		</div>
-
-		<div class="module-card" data-status="enabled" data-title="Formulaires" data-description="Création et gestion de formulaires dynamiques.">
-			<div class="emoji">📝</div>
-			<h3>Formulaires <small>v1.7.3</small></h3>
-			<p>Création et gestion de formulaires dynamiques.</p>
-			<button class="enabled-btn" aria-label="Désactiver module Formulaires">Activé</button>
-		</div>
-
-		<div class="module-card" data-status="disabled" data-title="Cache" data-description="Système de cache pour accélérer le chargement.">
-			<div class="emoji">⚡</div>
-			<h3>Cache <small>v1.2.4</small></h3>
-			<p>Système de cache pour accélérer le chargement.</p>
-			<button class="disabled-btn" aria-label="Activer module Cache">Désactivé</button>
-		</div>
-
-		<div class="module-card" data-status="available" data-title="Blog" data-description="Module complet pour la gestion d’un blog.">
-			<div class="emoji">✍️</div>
-			<h3>Blog <small>v1.8.0</small></h3>
-			<p>Module complet pour la gestion d’un blog.</p>
-			<button class="available-btn" aria-label="Installer module Blog">Disponible</button>
-		</div>
-
-		<div class="module-card" data-status="unavailable" data-title="Streaming" data-description="Diffusion en direct de vidéos et audios.">
-			<div class="emoji">🎥</div>
-			<h3>Streaming <small>v0.5.6</small></h3>
-			<p>Diffusion en direct de vidéos et audios.</p>
-			<button class="unavailable-btn" aria-label="Module Streaming non disponible" disabled>Indisponible</button>
-		</div>
-
-		<div class="module-card" data-status="enabled" data-title="Backup Cloud" data-description="Sauvegarde sécurisée sur le cloud.">
-			<div class="emoji">☁️</div>
-			<h3>Backup Cloud <small>v2.0.1</small></h3>
-			<p>Sauvegarde sécurisée sur le cloud.</p>
-			<button class="enabled-btn" aria-label="Désactiver module Backup Cloud">Activé</button>
-		</div>
-
-		<div class="module-card" data-status="disabled" data-title="API GraphQL" data-description="Fournit une API GraphQL flexible.">
-			<div class="emoji">🔗</div>
-			<h3>API GraphQL <small>v1.3.0</small></h3>
-			<p>Fournit une API GraphQL flexible.</p>
-			<button class="disabled-btn" aria-label="Activer module API GraphQL">Désactivé</button>
-		</div>
-
-	  
-    </section>
-  </main>
+	</main>
 </div>
 
 <script>
-  (() => {
-    const filterStatus = document.getElementById('filter-status');
-    const filterSearch = document.getElementById('filter-search');
-    const filterButton = document.getElementById('filter-button');
-    const modulesList = document.getElementById('modules-list');
-    const modules = [...modulesList.querySelectorAll('.module-card')];
+	(() => {
+		const filterStatus = document.getElementById('filter-status');
+		const filterSearch = document.getElementById('filter-search');
+		const filterButton = document.getElementById('filter-button');
+		const modulesList = document.getElementById('modules-list');
+		const modules = [...modulesList.querySelectorAll('.module-card')];
 
-    function filterModules() {
-      const statusVal = filterStatus.value.toLowerCase();
-      const searchVal = filterSearch.value.trim().toLowerCase();
+		function filterModules() {
+			const statusVal = filterStatus.value.toLowerCase();
+			const searchVal = filterSearch.value.trim().toLowerCase();
 
-      modules.forEach(mod => {
-        const modStatus = mod.getAttribute('data-status').toLowerCase();
-        const modTitle = mod.getAttribute('data-title').toLowerCase();
-        const modDesc = mod.getAttribute('data-description').toLowerCase();
+			modules.forEach(mod => {
+				const modStatus = mod.getAttribute('data-status').toLowerCase();
+				const modTitle = mod.getAttribute('data-title').toLowerCase();
+				const modDesc = mod.getAttribute('data-description').toLowerCase();
 
-        const statusMatch = (statusVal === 'all') || (modStatus === statusVal);
-        const searchMatch = modTitle.includes(searchVal) || modDesc.includes(searchVal);
+				const statusMatch = (statusVal === 'all') || (modStatus === statusVal);
+				const searchMatch = modTitle.includes(searchVal) || modDesc.includes(searchVal);
 
-        if (statusMatch && searchMatch) {
-          mod.style.display = '';
-        } else {
-          mod.style.display = 'none';
-        }
-      });
-    }
+				if (statusMatch && searchMatch) {
+					mod.style.display = '';
+				} else {
+					mod.style.display = 'none';
+				}
+			});
+		}
 
-    filterButton.addEventListener('click', filterModules);
+		filterButton.addEventListener('click', filterModules);
 
-    filterSearch.addEventListener('keydown', e => {
-      if (e.key === 'Enter') {
-        e.preventDefault();
-        filterModules();
-      }
-    });
-  })();
+		filterSearch.addEventListener('keydown', e => {
+			if (e.key === 'Enter') {
+				e.preventDefault();
+				filterModules();
+			}
+		});
+	})();
 </script>
+
 {% endblock %}

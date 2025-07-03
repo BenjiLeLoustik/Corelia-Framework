@@ -4,16 +4,31 @@
 
 namespace Corelia\CLI;
 
+/**
+ * Gestionnaire CLI pour les modules Corelia.
+ * Permet de lister, activer et désactiver les modules via la ligne de commande.
+ */
 class ModuleManager
 {
 
+    /**
+     * Chemin vers le dossier des modules.
+     * @var string
+     */
     protected string $modulesPath;
 
+    /**
+     * Constructeur.
+     * @param string $modulesPath       Chemin du dossier contenant les modules
+     */
     public function __construct( string $modulesPath )
     {
         $this->modulesPath = $modulesPath;
     }
 
+    /**
+     * Affiche la liste des modules avec leur statut (activé/désactivé).
+     */
     public function list()
     {
         foreach (scandir($this->modulesPath) as $dir) {
@@ -27,6 +42,10 @@ class ModuleManager
         }
     }
 
+    /**
+     * Active un module donné.
+     * @param string|null $name         Nom du module à activer
+     */
     public function enable( ?string $name )
     {
         if( !$name ){
@@ -36,6 +55,10 @@ class ModuleManager
         $this->setStatus( $name, true );
     }
 
+    /**
+     * Désactive un module donné.
+     * @param string|null $name         Nom du module à désactiver
+     */
     public function disable(?string $name)
     {
         if (!$name) {
@@ -45,6 +68,11 @@ class ModuleManager
         $this->setStatus($name, false);
     }
 
+    /**
+     * Modifie le statut (activé/désactivé) d'un module dans son fichier de configuration.
+     * @param string $name              Nom du module
+     * @param bool $status              true pour activer, false pour désactiver
+     */
     protected function setStatus(string $name, bool $status)
     {
         $configFile = "{$this->modulesPath}/$name/config.json";
