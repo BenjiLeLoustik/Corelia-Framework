@@ -322,35 +322,42 @@
 <div class="layout">
 
 	<nav class="sidebar">
+
 		<h2>
 			<span class="emoji">🛠️</span>
-			Framework
+			Corelia Admin
 		</h2>
+
 		{# Tableau de bord #}
 		<a href="#" class="active">
 			<span class="emoji">🏠</span>
 			Tableau de bord
 		</a>
+
 		{# Paramètres #}
 		<a href="#">
 			<span class="emoji">⚙️</span>
 			Paramètres
 		</a>
+
 		{# Logs #}
 		<a href="#">
 			<span class="emoji">📜</span>
 			Logs
 		</a>
+
 		{# Gestion BDD #}
 		<a href="#">
 			<span class="emoji">🗄️</span>
 			Gestion BDD
 		</a>
+
 		{# Retour sur le site #}
 		<a href="/">
 			<span class="emoji">🔙</span>
 			Retourner sur le site
 		</a>
+		
 	</nav>
 
 	<main class="main-content">
@@ -433,44 +440,5 @@
 
 	</main>
 </div>
-
-<script>
-	(() => {
-		const filterStatus = document.getElementById('filter-status');
-		const filterSearch = document.getElementById('filter-search');
-		const filterButton = document.getElementById('filter-button');
-		const modulesList = document.getElementById('modules-list');
-		const modules = [...modulesList.querySelectorAll('.module-card')];
-
-		function filterModules() {
-			const statusVal = filterStatus.value.toLowerCase();
-			const searchVal = filterSearch.value.trim().toLowerCase();
-
-			modules.forEach(mod => {
-				const modStatus = mod.getAttribute('data-status').toLowerCase();
-				const modTitle = mod.getAttribute('data-title').toLowerCase();
-				const modDesc = mod.getAttribute('data-description').toLowerCase();
-
-				const statusMatch = (statusVal === 'all') || (modStatus === statusVal);
-				const searchMatch = modTitle.includes(searchVal) || modDesc.includes(searchVal);
-
-				if (statusMatch && searchMatch) {
-					mod.style.display = '';
-				} else {
-					mod.style.display = 'none';
-				}
-			});
-		}
-
-		filterButton.addEventListener('click', filterModules);
-
-		filterSearch.addEventListener('keydown', e => {
-			if (e.key === 'Enter') {
-				e.preventDefault();
-				filterModules();
-			}
-		});
-	})();
-</script>
 
 {% endblock %}
