@@ -2,6 +2,8 @@
 
 /* ===== /Core/CLI/Commands/ModuleListCommand.php ===== */
 
+namespace Corelia\CLI\Commands;
+
 use Corelia\CLI\CommandInterface;
 use Corelia\CLI\ModuleManager;
 

@@ -2,6 +2,8 @@
 
 /* ===== /Core/CLI/Commands/CacheClearCommand.php ===== */
 
+namespace Corelia\CLI\Commands;
+
 use Corelia\CLI\CommandInterface;
 
 class CacheClearCommand implements CommandInterface
