@@ -1,0 +1,11 @@
+{
+    "name": "ORM",
+    "description": "Module ORM pour la gestion des bases de données",
+    "enabled": true,
+    "autoload": {
+        "psr-4": {
+            "Modules\\ORM\\": "modules\/ORM\/"
+        }
+    },
+    "routes": []
+}
