@@ -6,11 +6,10 @@ namespace Corelia\CLI;
 
 /**
  * Gestionnaire CLI pour les modules Corelia.
- * Permet de lister, activer et désactiver les modules via la ligne de commande.
+ * Permet de lister, activer, désactiver, et interroger les modules via la ligne de commande.
  */
 class ModuleManager
 {
-
     /**
      * Chemin vers le dossier des modules.
      * @var string
@@ -21,7 +20,7 @@ class ModuleManager
      * Constructeur.
      * @param string $modulesPath       Chemin du dossier contenant les modules
      */
-    public function __construct( string $modulesPath )
+    public function __construct(string $modulesPath)
     {
         $this->modulesPath = $modulesPath;
     }
@@ -46,13 +45,13 @@ class ModuleManager
      * Active un module donné.
      * @param string|null $name         Nom du module à activer
      */
-    public function enable( ?string $name )
+    public function enable(?string $name)
     {
-        if( !$name ){
-            echo "Nom du module require.\n";
+        if (!$name) {
+            echo "Nom du module requis.\n";
             return;
         }
-        $this->setStatus( $name, true );
+        $this->setStatus($name, true);
     }
 
     /**
@@ -86,5 +85,51 @@ class ModuleManager
         echo "Module $name " . ($status ? "activé" : "désactivé") . ".\n";
     }
 
+    /**
+     * Récupère les informations détaillées d'un module.
+     * @param string $name
+     * @return array|null
+     */
+    public function getInfo(string $name): ?array
+    {
+        $configFile = "{$this->modulesPath}/$name/config.json";
+        if (!file_exists($configFile)) {
+            return null;
+        }
+        $config = json_decode(file_get_contents($configFile), true);
+        return [
+            'name'        => $name,
+            'enabled'     => !empty($config['enabled']),
+            'version'     => $config['version'] ?? 'n/a',
+            'description' => $config['description'] ?? '',
+            'dependencies'=> $config['dependencies'] ?? [],
+            'routes'      => $config['routes'] ?? [],
+        ];
+    }
 
+    /**
+     * Récupère l'arbre des dépendances d'un module (récursif).
+     * @param string $name
+     * @param array $visited
+     * @return array|null
+     */
+    public function getDependenciesTree(string $name, array $visited = []): ?array
+    {
+        $configFile = "{$this->modulesPath}/$name/config.json";
+        if (!file_exists($configFile)) {
+            return null;
+        }
+        if (in_array($name, $visited)) {
+            // Pour éviter les boucles infinies
+            return [];
+        }
+        $visited[] = $name;
+        $config = json_decode(file_get_contents($configFile), true);
+        $deps = $config['dependencies'] ?? [];
+        $tree = [];
+        foreach ($deps as $dep) {
+            $tree[$dep] = $this->getDependenciesTree($dep, $visited) ?? [];
+        }
+        return $tree;
+    }
 }

@@ -1,66 +1,65 @@
 #!/usr/bin/env php
 <?php
 
-/* ===== CoreliaPHP - CLI ===== */
-
-/**
- * CLI principal de CoreliaPHP.
- * Permet de gérer les modules et de générer du code via des commandes en ligne.
- */
-
 require __DIR__ . '/vendor/autoload.php';
 
-use Corelia\CLI\ModuleManager;
+use Corelia\CLI\CommandInterface;
 
-// Tableau associatif des commandes disponibles et leur description
-$commands = [
-    'module:list'                        => 'Liste les modules.',
-    'module:enable <module>'             => 'Active un module.',
-    'module:disable <module>'            => 'Désactive un module.',
-    'make:module <name>'                 => 'Crée un nouveau module.',
-    'make:controller <module> <name>'    => 'Crée un contrôleur.',
-    'help'                               => 'Affiche cette aide.',
-];
+// Découverte automatique des commandes du noyau
+$coreCommands = glob( __DIR__ . '/Core/CLI/Commands/*.php' );
 
-// Récupération des arguments de la ligne de commande
-$argv = $_SERVER['argv'];
-$argc = $_SERVER['argc'];
+// Découverte automatique des commandes de chaque module
+$moduleCommands = glob( __DIR__ . '/modules/*/CLI/Commands/*.php' );
 
-// Commande demandée (par défaut : help)
-$command = $argv[1] ?? 'help';
 
-// Affiche l'aide si aucune commande ou commande 'help'
-if ($command === 'help' || $argc < 2) {
-    echo "\nUsage : php corelia <commande> [options]\n\n";
-    echo "Commandes disponibles pour :\n";
-    foreach ($commands as $name => $desc) {
-        printf("  %-40s %s\n", $name, $desc);
+$allCommands = array_merge( $coreCommands, $moduleCommands );
+
+$instances = [];
+foreach( $allCommands as $file ){
+    require_once $file;
+
+    // Trouve le FQCN à partir du chemin
+    $class = getClassFromFile( $file );
+
+    if( $class && class_exists( $class ) ){
+        $cmd = new $class();
+        if( $cmd instanceof CommandInterface ){
+            $instances[ $cmd->getName() ] = $cmd;
+        }
     }
-    echo "\n";
-    exit(0);
 }
 
-// Instancie le gestionnaire de modules
-$manager = new ModuleManager(__DIR__ . '/modules');
+// Récupération de la commande demandée
+$argv           = $_SERVER['argv'];
+$commandName    = $argv[1] ?? 'help';
 
-// Exécute la commande demandée
-switch ($command) {
-    case 'module:list':
-        $manager->list();
-        break;
-    case 'module:enable':
-        $manager->enable($argv[2] ?? null);
-        break;
-    case 'module:disable':
-        $manager->disable($argv[2] ?? null);
-        break;
-    case 'make:module':
-        (new \Corelia\CLI\Generator(__DIR__))->makeModule($argv[2] ?? null);
-        break;
-    case 'make:controller':
-        (new \Corelia\CLI\Generator(__DIR__))->makeController($argv[2] ?? null, $argv[3] ?? null);
-        break;
-    default:
-        echo "\nCommande inconnue. Tapez 'php corelia help' pour la liste des commandes.\n\n";
-        exit(1);
+// Affichage de l'aide si besoin
+if( $commandName == 'help' || !isset( $instances[$commandName] ) ){
+    echo "\nUsage : php corelia <commande> [options]\n\n";
+    echo "Commandes disponibles : \n";
+    foreach( $instances as $name => $cmd ){
+        printf( "   %-30s %s\n", $name, $cmd->getDescription() );
+    }
+    echo "\n";
+    exit( $commandName === 'help' ? 0 : 1 );
+}
+
+// Exécution de la commande demandée
+exit( $instances[ $commandName ]->execute( $argv ) );
+
+/**
+ * Helper pour retrouver le FQCN d'une classe à partir du chemin du fichier.
+ * (Suppose PSR-4 et un seul namespace par fichier)
+ */
+function getClassFromFile( $file )
+{
+    $src = file_get_contents( $file );
+    if( preg_match( '/namespace\s+([^;]+);/i', $src, $m ) ){
+        $ns = trim( $m[1] );
+        if( preg_match( '/class\s+([^\s]+)/i', $src, $m2 ) ){
+            return $ns . '\\' . trim( $m2[1] );
+        }
+    }
+
+    return null;
 }

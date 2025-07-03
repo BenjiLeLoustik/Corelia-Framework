@@ -55,4 +55,13 @@ class Router
         }
         return null;
     }
+
+    /**
+     * Retourne toutes les routes enregistrées sous forme de tableau.
+     * @return array
+     */
+    public function getAll(): array
+    {
+        return $this->routes ?? [];
+    }
 }

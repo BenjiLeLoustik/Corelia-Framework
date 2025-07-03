@@ -19,7 +19,7 @@ class Generator
      * Constructeur.
      * @param string $basePath              Chemin racine du projet
      */
-    public function __construct(string $basePath) { $this->basePath = $basePath; }
+    public function __construct(string $basePath) { $this->basePath = rtrim($basePath, '/\\'); }
 
     /**
      * Génère la structure d'un nouveau module avec son contrôleur et sa vue de base.
@@ -28,13 +28,13 @@ class Generator
     public function makeModule(?string $name)
     {
         if( !$name ){
-            echo "Nom du module requis.\n";
+            echo "\033[33m Nom du module requis. \033[0m \n";
             return;
         }
 
         $modulePath = "{$this->basePath}/modules/$name";
-        if( is_dir( $modulePath ) ){
-            echo "Le module $name existe déjà.\n";
+        if ( is_dir( $modulePath ) ) {
+            echo "\033[31m Le module $name existe déjà. \033[0m \n";
             return;
         }
 
@@ -56,14 +56,13 @@ class Generator
 
         file_put_contents( "$modulePath/config.json", json_encode( $config, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE ) );
 
-        // Contrôleur de base
-        $ctrl = "<?php\nnamespace Modules\\$name;\n\nclass {$name}Controller\n{\n    public function index()\n    {\n        echo 'Bienvenue dans le module $name';\n    }\n}\n";
-        file_put_contents( "$modulePath/{$name}Controller.php", $ctrl );
+        // Contrôleur de base (évite le doublon)
+        $this->makeController( $name, "{$name}Controller" );
 
         // Vue de base
-        file_put_contents( "$modulePath/Views/index.ctpl", "<h1>Bienvenue dans le module $name</h1>\n" );
+        file_put_contents( "$modulePath/Views/index.ctpl", "<h1>Bienvenue dans le module $name</h1> \n" );
 
-        echo "Module $name généré avec succès.\n";
+        echo "\033[32m Module $name généré avec succès. \033[0m \n";
     }
 
     /**
@@ -74,49 +73,113 @@ class Generator
     public function makeController(?string $moduleOrName, ?string $controllerName = null)
     {
         // Si $controllerName est null, on crée dans l'app principale
-        if (!$controllerName) {
+        if( !$controllerName ) {
 
             $name = $moduleOrName;
 
-            if( !$name ){ 
-                echo "Nom du contrôleur requis.\n"; 
-                return; 
+            if ( !$name ) {
+                echo "\033[33m Nom du contrôleur requis. \033[0m \n";
+                return;
             }
 
-            $ctrlPath = "{$this->basePath}/src/Controller/{$name}.php";
-            
-            if( file_exists( $ctrlPath ) ){ 
-                echo "Le contrôleur $name existe déjà.\n"; 
-                return; 
+            $ctrlPath = "{$this->basePath}/src/Controller/{$name}Controller.php";
+
+            if( file_exists( $ctrlPath ) ) {
+                echo "\033[31m Le contrôleur $name existe déjà. \033[0m \n";
+                return;
             }
-            
-            $code = "<?php\nnamespace App\Controller;\n\nclass $name\n{\n    public function index()\n    {\n        echo 'Bienvenue dans $name';\n    }\n}\n";
-            file_put_contents($ctrlPath, $code);
-            
-            echo "Contrôleur $name généré dans src/Controller.\n";
+
+            $namePath = strtolower( $name );
+
+            $code = <<<PHP
+                    <?php
+
+                    /* ===== /src/Controller/{$name}Controller.php ===== */
+                    namespace App\Controller;
+
+                    use Corelia\Controller\BaseController;
+                    use Corelia\Routing\RouteAttribute;
+                    use Corelia\Http\Response;
+
+                    /**
+                     * Contrôleur {$name}Controller
+                     */
+                    class {$name}Controller extends BaseController
+                    {
+                        /**
+                         * Affichage de la page index de $name
+                         * 
+                         * @return array 
+                         */
+                        #[RouteAttribute(path: '/{$namePath}', template: '{$name}/index.ctpl')]
+                        public function index(): array
+                        {
+                            return [ "welcomeController" => "Votre contrôleur `{$name}Controller` a bien été créé !" ];
+                        }
+                    }
+
+                    PHP;
+
+            file_put_contents( $ctrlPath, $code );
+
+            echo "\033[32m Contrôleur $name généré dans src/Controller. \033[0m \n";
 
         }else{
 
             // Cas module + contrôleur
             $module     = $moduleOrName;
             $name       = $controllerName;
-            $ctrlPath   = "{$this->basePath}/modules/$module/{$name}.php";
+            $moduleDir  = "{$this->basePath}/modules/$module";
+            $ctrlPath   = "$moduleDir/{$name}.php";
 
-            if( !is_dir( !"{$this->basePath}/modules/$module" ) ){ 
-                echo "Module $module introuvable.\n"; 
-                return; 
+            if( !is_dir( $moduleDir ) ) {
+                echo "\033[31m Module $module introuvable.\033[0m \n";
+                return;
             }
-           
-            if( file_exists( $ctrlPath ) ){ 
-                echo "Le contrôleur $name existe déjà dans $module.\n"; 
-                return; 
+
+            if( file_exists( $ctrlPath ) ) {
+                echo "\033[31m Le contrôleur $name existe déjà dans $module. \033[0m \n";
+                return;
             }
-            
-            $code = "<?php\nnamespace Modules\\$module;\n\nclass $name\n{\n    public function index()\n    {\n        echo 'Bienvenue dans $name du module $module';\n    }\n}\n";
-            file_put_contents($ctrlPath, $code);
-            
-            echo "Contrôleur $name généré dans le module $module.\n";
-        
+
+            $modulePath = strtolower( $module );
+
+            $code = <<<PHP
+                    <?php
+
+                    /* ===== /modules/{$module}/{$name}.php ===== */
+
+                    namespace Modules\\{$module};
+
+                    use Corelia\\Controller\\BaseController;
+                    use Corelia\\Routing\\RouteAttribute;
+                    use Corelia\\Http\\Response;
+
+                    /** 
+                     * Contrôleur principal du module {$module}.
+                     * Hérite de BaseController pour profiter des fonctionnalités communes aux contrôleurs.
+                     * 
+                     * @package Modules\\{$module}
+                     */
+                    class {$name} extends BaseController
+                    {
+                        /**
+                         * Affichage de la page $module de $module
+                         * 
+                         * @return array 
+                         */
+                        #[RouteAttribute(path: '/{$modulePath}', template: '{$module}::index.ctpl')]
+                        public function index(): array
+                        {
+                            return [ "welcomeController" => "Votre module `{$module}` a bien été créé !" ];
+                        }
+                    }
+
+                    PHP;
+
+            file_put_contents( $ctrlPath, $code );
+
+            echo "\033[32m Contrôleur $name généré dans le module $module. \033[0m \n";
         }
     }
 }
