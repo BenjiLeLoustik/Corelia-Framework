@@ -2,7 +2,7 @@
     "key": 3254781294,
     "name": "Admin",
     "description": "Module d'administration",
-    "enabled": true,
+    "enabled": false,
     "dependencies": [],
     "autoload": {
         "psr-4": {
