@@ -171,9 +171,14 @@ class Kernel
 
     protected function renderWelcomePage(): string
     {
-        $welcomeView = __DIR__ . '/../../src/Views/welcome.ctpl';
+        $welcomeView = __DIR__ . '/../src/Views/welcome.ctpl';
         if (file_exists($welcomeView)) {
-            return file_get_contents($welcomeView);
+            // Utilise le moteur de template pour interpréter welcome.ctpl
+            $template = new \Corelia\Template\CoreliaTemplate($welcomeView);
+            return $template->render([
+                // Variables à passer au template
+                'username' => 'visiteur'
+            ]);
         } else {
             return "<h1>Bienvenue sur CoreliaPHP</h1>
                     <p>Le framework est correctement installé.</p>

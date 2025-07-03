@@ -1,25 +1,80 @@
-<!-- /src/Views/welcome.ctpl -->
+{% extends 'base.ctpl' %}
 
-<!DOCTYPE html>
-<html lang="fr">
-<head>
-    <meta charset="UTF-8">
-    <title>Bienvenue sur CoreliaPHP</title>
-    <link rel="stylesheet" href="/assets/css/corelia.css">
-</head>
-<body{% if theme == 'dark' %} class="theme-dark"{% endif %}>
-    <div class="header">
-        <h1>Bienvenue sur <span style="color:#fff;font-weight:700;">CoreliaPHP</span></h1>
-        <p>Votre framework modulaire, moderne et extensible.</p>
-    </div>
-    <div class="card">
-        <h2>Prêt à démarrer ?</h2>
-        <ul>
-            <li>Créez un contrôleur dans <code>/src/Controller</code></li>
-            <li>Ajoutez une route avec <span class="link">#[RouteAttribute]</span></li>
-            <li>Consultez la <a class="link" href="https://votre-doc.local">documentation</a></li>
-        </ul>
-        <a href="/admin" class="button" style="margin-top:1.5rem;display:inline-block;">Accéder à l'administration</a>
-    </div>
-</body>
-</html>
+{% block style %}
+<style>
+  body {
+    margin: 0; 
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
+    background: #f0f2f5; 
+    box-sizing: border-box;
+    color: #333;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+  }
+
+  .error-page {
+    text-align: center;
+    background: #fff;
+    padding: 40px 60px;
+    border-radius: 12px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    max-width: 480px;
+  }
+
+  .error-page .emoji {
+    font-size: 72px;
+    margin-bottom: 20px;
+    display: block;
+  }
+
+  .error-page h1 {
+    font-size: 3rem;
+    margin: 0 0 10px;
+    color: #4f46e5;
+  }
+
+  .error-page p {
+    font-size: 1.15rem;
+    color: #555;
+    margin: 0 0 30px;
+    line-height: 1.4;
+  }
+
+  .error-page a {
+    display: inline-block;
+    padding: 12px 24px;
+    background-color: #4f46e5;
+    color: #fff;
+    text-decoration: none;
+    font-weight: 600;
+    border-radius: 8px;
+    transition: background-color 0.3s ease;
+  }
+  .error-page a:hover {
+    background-color: #4338ca;
+  }
+
+  @media (max-width: 600px) {
+    .error-page {
+      padding: 30px 20px;
+    }
+    .error-page h1 {
+      font-size: 2.4rem;
+    }
+    .error-page .emoji {
+      font-size: 56px;
+    }
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="error-page" role="main" aria-labelledby="error-title">
+  <span class="emoji">🚀</span>
+  <h1 id="error-title" style="font-size: 100px; padding: 0 auto;">404 <span style="font-size: 40px; display: block;">Page non trouvée</span></h1>
+  <p>Oups ! La page que vous recherchez n’existe pas ou a été déplacée.</p>
+  <a href="/" aria-label="Retour à l’accueil">Retour à l’accueil</a>
+</div>
+{% endblock %}

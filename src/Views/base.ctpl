@@ -4,13 +4,10 @@
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
-    <title>{title}</title>
+    <title>{% block title %}CoreliaPHP{% endblock %}</title>
+    {% block style %}{% endblock %}
 </head>
 <body>
-    {include:Partials/header.ctpl}
-    <main>
-        {content}
-    </main>
-    {include:Partials/footer.ctpl}
+    {% block content %}{% endblock %}
 </body>
 </html>

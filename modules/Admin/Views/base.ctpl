@@ -4,23 +4,11 @@
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
-    <title>{% block title %}Administration CoreliaPHP{% endblock %}</title>
-    <link rel="stylesheet" href="/assets/css/corelia.css">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}CoreliaPHP{% endblock %}</title>
+    {% block style %}{% endblock %}
 </head>
-<body{% if theme == 'dark' %} class="theme-dark"{% endif %}>
-    <div class="admin-sidebar">
-        <h2 style="margin-top:0;">CoreliaPHP</h2>
-        <nav>
-            <ul style="list-style:none;padding:0;">
-                <li><a class="link" href="/admin">Dashboard</a></li>
-                <li><a class="link" href="/admin/modules">Modules</a></li>
-                <li><a class="link" href="/admin/routes">Routes</a></li>
-                <li><a class="link" href="/admin/settings">Paramètres</a></li>
-            </ul>
-        </nav>
-    </div>
-    <div class="admin-main">
-        
-    </div>
+<body>
+    {% block content %}{% endblock %}
 </body>
 </html>
