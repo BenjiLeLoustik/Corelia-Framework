@@ -401,35 +401,30 @@
 		{# Modules #}
 		<section id="modules-list" class="grid">	
 
-			{% for key, marketplaceModule in modulesMarketplace %}
+			{% for moduleData in modulesData %}
+				<div class="module-card" data-title="{{ moduleData.marketplaceModule.title }}"
+					data-description="{{ moduleData.marketplaceModule.description }}">
+					<div class="emoji">{{ moduleData.marketplaceModule.ico }}</div>
+					<h3>
+						{{ moduleData.marketplaceModule.title }}
+						<br />
+						<small>{{ moduleData.marketplaceModule.version }}</small>
+					</h3>
+					<p>{{ moduleData.marketplaceModule.description }}</p>
 
-				<div class="module-card" data-title="{{ marketplaceModule.name }}"
-					data-description="{{ marketplaceModule.description }}">
-					<div class="emoji">{{ marketplaceModule.ico }}</div>
-					<h3>{{ marketplaceModule.name }}<small>{{ marketplaceModule.version }}</small></h3>
-					<p>{{ marketplaceModule.description }}</p>
-					{{ text }}
-
-					{% if marketplaceModule.key in installedModulesByKey %}
-
-						{% if installedModules.0.enabled == true %}
-							<button class="disabled-btn" onclick="window.location.href='/modules/{{ marketplaceModule.name }}/disabled'">Desactiver le module</button>
+					{% if moduleData.isInstalled %}
+						{% if moduleData.isEnabled %}
+							<button class="disabled-btn" onclick="window.location.href='/modules/{{ moduleData.marketplaceModule.name }}/disabled'">Désactiver le module</button>
+						{% else %}
+							<button class="enabled-btn" onclick="window.location.href='/modules/{{ moduleData.marketplaceModule.name }}/enabled'">Activer le module</button>
 						{% endif %}
-
-						{% if installedModules.0.enabled == false %}
-							<button class="enabled-btn" onclick="window.location.href='/modules/{{ marketplaceModule.name }}/enabled'">Activer le module</button>
-						{% endif %}
-
 					{% else %}
-
-						{% if marketplaceModule.status == 'available' %}
-							<button class="available-btn" onclick="window.location.href='{{ marketplaceModule.download_url }}'">Télécharger</button>
+						{% if moduleData.isAvailable %}
+							<button class="available-btn" onclick="window.location.href='{{ moduleData.marketplaceModule.download_url }}'">Télécharger</button>
 						{% endif %}
-						
-						{% if marketplaceModule.status == 'unavailable' %}
+						{% if moduleData.isUnavailable %}
 							<button class="unavailable-btn">Non disponible</button>
 						{% endif %}
-
 					{% endif %}
 					
 				</div>

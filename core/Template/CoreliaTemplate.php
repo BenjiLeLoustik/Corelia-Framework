@@ -1,35 +1,25 @@
 <?php
 
-/* ===== /Core/Template/CoreliaTemplate.php ===== */
-
 namespace Corelia\Template;
 
 /**
- * Moteur de template minimaliste façon Twig pour CoreliaPHP.
- * Gère l'héritage, les blocs, les variables, les boucles, les conditions et l'inclusion.
+ * Moteur de template maison inspiré de Twig (80% des usages courants).
+ * Gère blocs, héritage, boucles, conditions, includes, appels de méthodes/propriétés, filtres de base.
  */
 class CoreliaTemplate
 {
-    
-    // Chemin du fichier template principal à utiliser pour le rendu
+    /** @var string Chemin du template principal à utiliser */
     protected string $templatePath;
 
-    // Tableau associatif des blocs définis dans le(s) template(s)
-    // (ex : 'content' => '<h1>...</h1>')
+    /** @var array Blocs définis dans les templates (pour l’héritage) */
     protected array $blocks = [];
 
-    // Pile utilisée pour gérer l'imbrication des blocs lors du parsing (utile pour l'héritage)
-    protected array $blockStack = [];
-
-    // Chemin du template parent si le template courant utilise {% extends ... %}
-    // (null si pas d'héritage)
+    /** @var string|null Chemin du template parent si extends */
     protected ?string $parentTemplate = null;
 
     /**
-     * Constructeur de la classe CoreliaTemplate.
-     * Initialise le moteur avec le chemin du template à utiliser.
-     *
-     * @param string $templatePath      Chemin du fichier template à charger
+     * Constructeur : initialise le moteur avec le chemin du template principal.
+     * @param string $templatePath Chemin du template principal à utiliser
      */
     public function __construct(string $templatePath)
     {
@@ -37,53 +27,51 @@ class CoreliaTemplate
     }
 
     /**
-     * Rend le template principal avec les variables fournies.
-     * Gère l'héritage de template (extends) et la fusion des blocs.
-     *
-     * @param array $vars               Variables à injecter dans le template
-     * @return string                   HTML généré
+     * Rend le template avec les variables fournies.
+     * Gère l’héritage et la fusion des blocs.
+     * @param array $vars Variables à injecter dans le template
+     * @return string HTML généré
      */
     public function render(array $vars = []): string
     {
+        // Variables globales disponibles partout
         $globals = [
             'now' => new \DateTime(),
-            'app' => [
-                'name' => 'CoreliaPHP',
-            ],
+            'app' => ['name' => 'CoreliaPHP'],
         ];
         $vars = array_merge($globals, $vars);
-
+        // Collecte les blocs du template courant et de ses parents
         $this->collectBlocks($this->templatePath, $vars);
 
+        // Si héritage, rend le parent avec les blocs fusionnés
         if ($this->parentTemplate) {
             $parent = new self($this->parentTemplate);
             $parent->blocks = $this->blocks;
             return $parent->render($vars);
-        } else {
-            return $this->renderTemplate($this->templatePath, $vars, $this->blocks);
         }
+        // Sinon, rend le template courant
+        return $this->renderTemplate($this->templatePath, $vars, $this->blocks);
     }
 
     /**
      * Recherche tous les blocs dans un template (et ses parents).
-     * Gère également l'héritage avec {% extends ... %}.
-     *
-     * @param string $file              Chemin du template à analyser
-     * @param array $vars               Variables disponibles lors de l'analyse
+     * Gère également l’héritage avec {% extends ... %}.
+     * @param string $file Chemin du template à analyser
+     * @param array $vars Variables disponibles lors de l’analyse
+     * @return void
      */
-    protected function collectBlocks(string $file, array $vars)
+    protected function collectBlocks(string $file, array $vars): void
     {
-        if (!file_exists($file)) {
-            error_log("DEBUG: Fichier template introuvable: $file");
-            return;
-        }
+        if (!file_exists($file)) return;
         $tpl = file_get_contents($file);
 
+        // Détection de l’héritage
         if (preg_match('/\{% extends [\'"]([^\'"]+)[\'"] %\}/', $tpl, $m)) {
             $this->parentTemplate = $this->resolvePath($m[1], $file);
             $tpl = str_replace($m[0], '', $tpl);
         }
 
+        // Extraction des blocs
         preg_replace_callback('/\{% block (\w+) %\}(.*?)\{% endblock %\}/s', function ($m) {
             $blockName = $m[1];
             $blockContent = $m[2];
@@ -93,6 +81,7 @@ class CoreliaTemplate
             return '';
         }, $tpl);
 
+        // Récupération récursive des blocs du parent si héritage
         if ($this->parentTemplate) {
             $parent = new self($this->parentTemplate);
             $parent->blocks = $this->blocks;
@@ -104,49 +93,49 @@ class CoreliaTemplate
     /**
      * Rend un fichier template avec les variables et blocs fournis.
      * Remplace les blocs par leur contenu hérité et parse toutes les instructions.
-     *
-     * @param string $file              Chemin du template à rendre
-     * @param array $vars               Variables à injecter
-     * @param array $blocks             Blocs hérités à utiliser
-     * @return string                   HTML généré
+     * @param string $file Chemin du template à rendre
+     * @param array $vars Variables à injecter
+     * @param array $blocks Blocs hérités à utiliser
+     * @return string HTML généré
      */
     protected function renderTemplate(string $file, array $vars, array $blocks): string
     {
-        if (!file_exists($file)) {
-            error_log("DEBUG: Fichier template introuvable: $file");
-            return "<!-- Template non trouvé pour : $file -->";
-        }
+        if (!file_exists($file)) return "<!-- Template non trouvé pour : $file -->";
         $tpl = file_get_contents($file);
 
+        // Suppression de la déclaration d’héritage
         $tpl = preg_replace('/\{% extends [\'"][^\'"]+[\'"] %\}/', '', $tpl);
 
+        // Remplacement des blocs par leur contenu
         $tpl = preg_replace_callback('/\{% block (\w+) %\}(.*?)\{% endblock %\}/s', function ($m) use ($blocks, $vars, $file) {
             $blockName = $m[1];
             $blockContent = $blocks[$blockName] ?? $m[2];
+            // Parse récursivement le contenu du bloc
             return $this->parseString($this->parseAll($blockContent, $vars, $file), $vars);
         }, $tpl);
 
+        // Parse toutes les autres instructions du template
         return $this->parseAll($tpl, $vars, $file);
     }
 
     /**
      * Parse toutes les instructions du template (set, include, for, if...).
-     * C'est la fonction centrale de transformation du template en HTML final.
-     *
-     * @param string $tpl               Le contenu du template à parser
-     * @param array  $vars              Les variables du contexte (passées par référence)
-     * @param string $file              Le chemin du template courant (pour les includes)
-     * @return string                   Le template transformé
+     * @param string $tpl Contenu du template à parser
+     * @param array &$vars Variables du contexte (passées par référence)
+     * @param string $file Chemin du template courant (pour les includes)
+     * @return string Template transformé
      */
     protected function parseAll(string $tpl, array &$vars, string $file): string
     {
+        
         // Supprime les commentaires Twig {# ... #}
         $tpl = preg_replace('/\{#.*?#\}/s', '', $tpl);
 
-        // {% set var = value %}
+        // Gestion des variables {% set var = value %}
         $tpl = preg_replace_callback('/\{% set (\w+) = (.+?) %\}/s', function ($m) use (&$vars) {
             $name = $m[1];
             $value = trim($m[2]);
+            // Gestion des tableaux et objets JSON
             if ((substr($value, 0, 1) === '[' && substr($value, -1) === ']') ||
                 (substr($value, 0, 1) === '{' && substr($value, -1) === '}')) {
                 $jsonVal = preg_replace_callback('/\'([^\']*)\'/', fn($matches) => '"' . addcslashes($matches[1], '"') . '"', $value);
@@ -156,6 +145,7 @@ class CoreliaTemplate
                     return '';
                 }
             }
+            // Gestion des chaînes, nombres, booléens
             if (preg_match('/^["\'](.*)["\']$/', $value, $str)) {
                 $vars[$name] = $str[1];
             } elseif (preg_match('/^\[(.*?)\]$/', $value, $arr)) {
@@ -172,7 +162,7 @@ class CoreliaTemplate
             } elseif ($value === 'false') {
                 $vars[$name] = false;
             } else {
-                // Correction : toujours resolveTwigVar pour les expressions
+                // Résolution d'expressions complexes
                 $resolved = $this->resolveTwigVar($value, $vars);
                 $vars[$name] = $resolved !== null ? $resolved : $value;
             }
@@ -185,32 +175,32 @@ class CoreliaTemplate
             return $this->renderTemplate($incPath, $vars, $this->blocks);
         }, $tpl);
 
-        // Boucles for imbriquées (parseur récursif)
+        // Boucles for imbriquées
         $tpl = $this->parseForBlocks($tpl, $vars, $file);
 
-        // Gestion récursive des blocs if/elseif/else/endif imbriqués
+        // Conditions imbriquées
         $tpl = $this->parseIfBlocks($tpl, $vars, $file);
 
+        $tpl = $this->parseString($tpl, $vars);
+        
         return $tpl;
     }
 
     /**
      * Parse récursivement les blocs for imbriqués.
-     * Gère les instructions {% for ... in ... %} ... {% endfor %}
-     * Supporte aussi {% for key, value in array %} (clé/valeur).
-     *
-     * @param string $tpl               Le contenu du template à parser
-     * @param array  $vars              Les variables du contexte (passées par référence)
-     * @param string $file              Le chemin du template courant
-     * @return string                   Le template transformé avec les boucles déroulées
+     * Gère {% for ... in ... %} ... {% endfor %} et {% for key, value in array %}
+     * @param string $tpl Contenu du template à parser
+     * @param array &$vars Variables du contexte (passées par référence)
+     * @param string $file Chemin du template courant
+     * @return string Template transformé avec les boucles déroulées
      */
     protected function parseForBlocks(string $tpl, array &$vars, string $file): string
     {
-        $pattern = '/\{% for (\w+)(?:,\s*(\w+))? in ([\w\.]+) %\}/';
+        $pattern = '/\{% for (\w+)(?:,\s*(\w+))? in ([^\s%]+) %\}/';
         while (preg_match($pattern, $tpl, $m, PREG_OFFSET_CAPTURE)) {
             $start = $m[0][1];
             $var1 = $m[1][0];
-            $var2 = isset($m[2][0]) ? $m[2][0] : null;
+            $var2 = isset($m[2][0]) && $m[2][0] !== '' ? $m[2][0] : null;
             $arrExpr = $m[3][0];
             $rest = substr($tpl, $start + strlen($m[0][0]));
             $depth = 1;
@@ -229,7 +219,6 @@ class CoreliaTemplate
                         if ($depth === 0) {
                             $block = substr($rest, 0, $tagStart);
                             $after = substr($rest, $tagStart + strlen($tag[0][0]));
-                            // Résolution de la variable de boucle
                             $arr = $this->resolveTwigVar($arrExpr, $vars);
                             $out = '';
                             if (is_array($arr)) {
@@ -257,7 +246,6 @@ class CoreliaTemplate
                                 }
                             }
                             $tpl = substr($tpl, 0, $start) . $out . $after;
-                            // Redémarre le parsing car tout a bougé
                             return $this->parseForBlocks($tpl, $vars, $file);
                         }
                         $offset = $tagStart + strlen($tag[0][0]);
@@ -272,14 +260,12 @@ class CoreliaTemplate
     }
 
     /**
-     * Parse récursivement les blocs if/elseif/else/endif imbriqués.
-     * Gère les instructions {% if ... %} ... {% elseif ... %} ... {% else %} ... {% endif %}
-     * Supporte les opérateurs ==, !=, in, not in, et les expressions simples.
-     *
-     * @param string $tpl               Le contenu du template à parser
-     * @param array  $vars              Les variables du contexte (passées par référence)
-     * @param string $file              Le chemin du template courant
-     * @return string                   Le template transformé avec les conditions évaluées
+     * Parse récursivement les blocs conditionnels imbriqués.
+     * Gère {% if ... %}, {% elseif ... %}, {% else %}, {% endif %}
+     * @param string $tpl Contenu du template à parser
+     * @param array &$vars Variables du contexte (passées par référence)
+     * @param string $file Chemin du template courant
+     * @return string Template transformé avec conditions évaluées
      */
     protected function parseIfBlocks(string $tpl, array &$vars, string $file): string
     {
@@ -342,7 +328,6 @@ class CoreliaTemplate
                 $parts[] = ['cond' => null, 'block' => $current];
             }
 
-            // Évalue les conditions
             $result = '';
             foreach ($parts as $part) {
                 if ($part['cond'] === null) {
@@ -350,86 +335,18 @@ class CoreliaTemplate
                     break;
                 }
                 $expr = $part['cond'];
-                // == et !=
                 if (preg_match('/^((?:[\w\.]+)|(?:-?\d+)|(?:["\'][^"\']+["\']))\s*(==|!=)\s*((?:[\w\.]+)|(?:-?\d+)|(?:["\'][^"\']+["\']))\s*$/', $expr, $cmp)) {
                     $leftRaw = trim($cmp[1]);
                     $op = trim($cmp[2]);
                     $rightRaw = trim($cmp[3]);
-                    if (preg_match('/^["\'](.*)["\']$/', $leftRaw, $str)) {
-                        $left = $str[1];
-                    } elseif (is_numeric($leftRaw)) {
-                        $left = 0 + $leftRaw;
-                    } elseif ($leftRaw === 'true') {
-                        $left = true;
-                    } elseif ($leftRaw === 'false') {
-                        $left = false;
-                    } else {
-                        $left = $this->resolveTwigVar($leftRaw, $vars);
-                    }
-                    if (preg_match('/^["\'](.*)["\']$/', $rightRaw, $str)) {
-                        $right = $str[1];
-                    } elseif (is_numeric($rightRaw)) {
-                        $right = 0 + $rightRaw;
-                    } elseif ($rightRaw === 'true') {
-                        $right = true;
-                    } elseif ($rightRaw === 'false') {
-                        $right = false;
-                    } else {
-                        $right = $this->resolveTwigVar($rightRaw, $vars);
-                    }
+                    $left = $this->parseIfOperand($leftRaw, $vars);
+                    $right = $this->parseIfOperand($rightRaw, $vars);
                     $ok = ($op === '==') ? ($left == $right) : ($left != $right);
                     if ($ok) {
                         $result = $this->parseAll($part['block'], $vars, $file);
                         break;
                     }
-                }
-                // in / not in (clé de tableau associatif)
-                elseif (preg_match('/^([\w\.]+)\s+(not\s+in|in)\s+([\w\.]+)$/', $expr, $cmp)) {
-                    $left = $this->resolveTwigVar(trim($cmp[1]), $vars);
-                    $op = trim($cmp[2]);
-                    $rightArr = $this->resolveTwigVar(trim($cmp[3]), $vars);
-                    $in = is_array($rightArr) && array_key_exists($left, $rightArr);
-                    $ok = ($op === 'in') ? $in : !$in;
-                    if ($ok) {
-                        $result = $this->parseAll($part['block'], $vars, $file);
-                        break;
-                    }
-                }
-                // in / not in (tableau littéral)
-                elseif (preg_match('/^([\w\.]+)\s+(not\s+in|in)\s+(\[.+\])$/', $expr, $cmp)) {
-                    $left = $this->resolveTwigVar(trim($cmp[1]), $vars);
-                    $op = trim($cmp[2]);
-                    $rightRaw = trim($cmp[3]);
-                    $rightRaw = trim($rightRaw);
-                    if (substr($rightRaw, 0, 1) === '[' && substr($rightRaw, -1) === ']') {
-                        $rightRaw = substr($rightRaw, 1, -1);
-                        $arr = [];
-                        foreach (explode(',', $rightRaw) as $v) {
-                            $v = trim($v);
-                            if (preg_match('/^["\'](.*)["\']$/', $v, $m)) {
-                                $arr[] = $m[1];
-                            } elseif (is_numeric($v)) {
-                                $arr[] = 0 + $v;
-                            } elseif ($v === 'true') {
-                                $arr[] = true;
-                            } elseif ($v === 'false') {
-                                $arr[] = false;
-                            } else {
-                                $arr[] = $v;
-                            }
-                        }
-                    } else {
-                        $arr = [];
-                    }
-                    $in = in_array($left, $arr, true);
-                    $ok = ($op === 'in') ? $in : !$in;
-                    if ($ok) {
-                        $result = $this->parseAll($part['block'], $vars, $file);
-                        break;
-                    }
-                }
-                // Expression simple
-                else {
+                } else {
                     $value = $this->resolveTwigVar($expr, $vars);
                     if ($value) {
                         $result = $this->parseAll($part['block'], $vars, $file);
@@ -437,24 +354,42 @@ class CoreliaTemplate
                     }
                 }
             }
-
-            // Remplace le bloc complet
             $tpl = substr($tpl, 0, $start) . $result . substr($rest, $offset);
         }
         return $tpl;
     }
 
     /**
+     * Analyse un opérande dans une condition if (gestion des chaînes, booléens, variables).
+     * @param string $operand Expression à analyser
+     * @param array $vars Variables du contexte
+     * @return mixed Valeur évaluée
+     */
+    protected function parseIfOperand(string $operand, array $vars)
+    {
+        if (preg_match('/^["\'](.*)["\']$/', $operand, $str)) {
+            return $str[1];
+        } elseif (is_numeric($operand)) {
+            return 0 + $operand;
+        } elseif ($operand === 'true') {
+            return true;
+        } elseif ($operand === 'false') {
+            return false;
+        } else {
+            return $this->resolveTwigVar($operand, $vars);
+        }
+    }
+
+    /**
      * Remplace les expressions {{ ... }} dans le template par leur valeur.
      * Gère les filtres de base (upper, lower, date, raw), l'accès aux tableaux, et le debug.
-     *
-     * @param string $tpl               Le contenu du template à parser
-     * @param array  $vars              Les variables du contexte
-     * @return string                   Le template transformé avec les variables remplacées
+     * @param string $tpl Contenu du template à parser
+     * @param array $vars Variables du contexte
+     * @return string Template transformé avec les variables remplacées
      */
     protected function parseString(string $tpl, array $vars): string
     {
-        // {{ dump(variable) }}
+        // Debug : {{ dump(variable) }}
         $tpl = preg_replace_callback('/\{\{\s*dump\((.*?)\)\s*\}\}/', function($m) use ($vars) {
             $expr = trim($m[1]);
             $val = null;
@@ -470,7 +405,7 @@ class CoreliaTemplate
             return ob_get_clean();
         }, $tpl);
 
-        // {{ tableau[clé] }}
+        // Accès tableau : {{ tableau[clé] }}
         $tpl = preg_replace_callback('/\{\{\s*([\w\.]+)\[([^\]\}]+)\]\s*\}\}/', function($m) use ($vars) {
             $array = $this->resolveTwigVar($m[1], $vars);
             $keyExpr = trim($m[2]);
@@ -482,79 +417,89 @@ class CoreliaTemplate
             return isset($array[$key]) ? htmlspecialchars((string)$array[$key], ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8') : '';
         }, $tpl);
 
-        // {{ var }}, {{ var.prop }}, filtres de base
-        return preg_replace_callback('/\{\{\s*(?:(["\'])(.*?)\1|([\w\.]+))((?:\|[\w]+(?:\([^\)]*\))?)*)\s*\}\}/', function ($m) use ($vars) {
-            $val = '';
-            if (isset($m[2]) && $m[2] !== '') {
-                $val = $m[2];
-            } elseif (isset($m[3]) && $m[3] !== '') {
-                $val = $this->resolveTwigVar($m[3], $vars);
-            }
-
-            if (!empty($m[4])) {
-                $filters = explode('|', trim($m[4], '|'));
-                foreach ($filters as $filter) {
-                    if ($filter === 'raw') continue;
-                    if ($filter === 'upper') $val = mb_strtoupper($val);
-                    elseif ($filter === 'lower') $val = mb_strtolower($val);
-                    elseif (preg_match('/^date\([\'"]([^\'"]+)[\'"]\)$/', $filter, $dm)) {
-                        if ($val instanceof \DateTime) $val = $val->format($dm[1]);
-                        elseif (is_numeric($val)) $val = date($dm[1], $val);
-                        else {
-                            $dt = @strtotime($val);
-                            $val = $dt ? date($dm[1], $dt) : $val;
+        // Variables, propriétés, appels de méthodes, filtres
+        return preg_replace_callback(
+            '/\{\{\s*(?:(["\'])(.*?)\1|([a-zA-Z0-9_\.()]+))((?:\|[\w]+(?:\([^\)]*\))?)*)\s*\}\}/',
+            function ($m) use ($vars) {
+                $val = '';
+                if (isset($m[2]) && $m[2] !== '') {
+                    $val = $m[2];
+                } elseif (isset($m[3]) && $m[3] !== '') {
+                    $val = $this->resolveTwigVar($m[3], $vars);
+                }
+                // Filtres
+                if (!empty($m[4])) {
+                    $filters = explode('|', trim($m[4], '|'));
+                    foreach ($filters as $filter) {
+                        if ($filter === 'raw') continue;
+                        if ($filter === 'upper') $val = mb_strtoupper($val);
+                        elseif ($filter === 'lower') $val = mb_strtolower($val);
+                        elseif (preg_match('/^date\([\'"]([^\'"]+)[\'"]\)$/', $filter, $dm)) {
+                            if ($val instanceof \DateTime) $val = $val->format($dm[1]);
+                            elseif (is_numeric($val)) $val = date($dm[1], $val);
+                            else {
+                                $dt = @strtotime($val);
+                                $val = $dt ? date($dm[1], $dt) : $val;
+                            }
                         }
                     }
+                    if (in_array('raw', $filters)) {
+                        if ($val instanceof \DateTime) return $val->format('Y-m-d H:i:s');
+                        if (is_object($val)) return method_exists($val, '__toString') ? (string)$val : '[object]';
+                        return $val;
+                    }
                 }
-                if (in_array('raw', $filters)) {
-                    if ($val instanceof \DateTime) return $val->format('Y-m-d H:i:s');
-                    if (is_object($val)) return method_exists($val, '__toString') ? (string)$val : '[object]';
-                    return $val;
-                }
-            }
-            if ($val instanceof \DateTime) return htmlspecialchars($val->format('Y-m-d H:i:s'), ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
-            if (is_object($val)) return htmlspecialchars(method_exists($val, '__toString') ? (string)$val : '[object]', ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
-            return htmlspecialchars((string)$val, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
-        }, $tpl);
+                // Échappement HTML par défaut
+                if ($val instanceof \DateTime) return htmlspecialchars($val->format('Y-m-d H:i:s'), ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
+                if (is_object($val)) return htmlspecialchars(method_exists($val, '__toString') ? (string)$val : '[object]', ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
+                return htmlspecialchars((string)$val, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
+            },
+            $tpl
+        );
     }
 
     /**
-     * Résout une expression Twig (notation pointée ou tableau) dans le contexte des variables.
-     * Exemples : foo.bar, foo[bar.key], etc.
-     *
-     * @param string $expr              Expression à résoudre
-     * @param array $vars               Variables du contexte
-     * @return mixed|null               Valeur trouvée ou null si non trouvée
+     * Résout une expression Twig (notation pointée, tableau, méthode) dans le contexte des variables.
+     * Exemples : foo.bar, foo[bar.key], foo.getName()
+     * @param string $expr Expression à résoudre
+     * @param array $vars Variables du contexte
+     * @return mixed|null Valeur trouvée ou null si non trouvée
      */
     protected function resolveTwigVar(string $expr, array $vars)
     {
-        // Accès dynamique : foo[bar.key].baz
-        if (preg_match_all('/([\w]+)(\[[^\]]+\])*/', $expr, $matches)) {
-            $parts = [];
-            foreach ($matches[1] as $i => $base) {
-                $parts[] = $base;
-                if (!empty($matches[2][$i])) {
-                    preg_match_all('/\[([^\]]+)\]/', $matches[2][$i], $arrMatches);
-                    foreach ($arrMatches[1] as $arrKeyExpr) {
-                        $parts[] = $this->resolveTwigVar($arrKeyExpr, $vars);
-                    }
-                }
-            }
-            $val = $vars;
-            foreach ($parts as $part) {
-                if (is_array($val) && array_key_exists($part, $val)) $val = $val[$part];
-                elseif (is_object($val) && isset($val->$part)) $val = $val->$part;
-                else return null;
-            }
-            return $val;
-        }
-        // Fallback simple
         $parts = explode('.', $expr);
         $val = $vars;
         foreach ($parts as $part) {
-            if (is_array($val) && array_key_exists($part, $val)) $val = $val[$part];
-            elseif (is_object($val) && isset($val->$part)) $val = $val->$part;
-            else return null;
+            // Appel de méthode sans argument, ex : getId()
+            if (is_object($val) && preg_match('/^(\w+)\(\)$/', $part, $matches)) {
+                $method = $matches[1];
+                if (method_exists($val, $method)) {
+                    $val = $val->$method();
+                    continue;
+                } else {
+                    return null;
+                }
+            }
+            // Accès à une clé dans un tableau
+            if (is_array($val) && array_key_exists($part, $val)) {
+                $val = $val[$part];
+                continue;
+            }
+            // Getter magique getXxx() même si propriété protégée
+            if (is_object($val)) {
+                $getter = 'get' . ucfirst($part);
+                if (method_exists($val, $getter)) {
+                    $val = $val->$getter();
+                    continue;
+                }
+                // Accès à une propriété publique (rare dans ton cas)
+                if (property_exists($val, $part)) {
+                    $val = $val->$part;
+                    continue;
+                }
+            }
+            // Si rien ne correspond, retourne null
+            return null;
         }
         return $val;
     }
@@ -562,10 +507,9 @@ class CoreliaTemplate
     /**
      * Résout le chemin absolu d'un template à inclure ou à hériter.
      * Gère les chemins relatifs, absolus, notation module::template, etc.
-     *
-     * @param string $relative          Chemin relatif ou spécial du template
-     * @param string $currentFile       Chemin du template courant (pour le relatif)
-     * @return string                   Chemin absolu du template résolu
+     * @param string $relative Chemin relatif ou spécial du template
+     * @param string $currentFile Chemin du template courant (pour le relatif)
+     * @return string Chemin absolu du template résolu
      */
     protected function resolvePath(string $relative, string $currentFile): string
     {

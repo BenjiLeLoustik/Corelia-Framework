@@ -148,12 +148,15 @@ class Kernel
                     }
 
                     $result = call_user_func_array([$controller, $method], $params);
-
+                    
                     // Si un template est défini et que la méthode retourne un tableau, on fait le rendu
                     if ($template && is_array($result)) {
                         $templatePath = $this->resolveTemplatePath($template);
+
                         $tpl = new CoreliaTemplate($templatePath);
-                        echo $tpl->render($result);
+                        $html = $tpl->render($result);
+                        error_log("RENDERED HTML: " . substr($html, 0, 200));
+                        echo $html;
                         return;
                     }
 
@@ -182,7 +185,6 @@ class Kernel
                 return;
             }
         }
-
         // Fallback : page d'accueil par défaut
         $response->setStatusCode(200)->setContent($this->renderWelcomePage())->send();
     }

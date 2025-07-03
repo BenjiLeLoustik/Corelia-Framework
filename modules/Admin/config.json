@@ -1,6 +1,7 @@
 {
     "key": 3254781294,
     "name": "Admin",
+    "title": "Administration",
     "description": "Module d'administration",
     "enabled": true,
     "dependencies": [],

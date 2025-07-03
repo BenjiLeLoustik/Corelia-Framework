@@ -1,5 +1,7 @@
 {
+    "key": 9876543210,
     "name": "ORM",
+    "title": "ORM",
     "description": "Module ORM pour la gestion des bases de données",
     "enabled": true,
     "autoload": {

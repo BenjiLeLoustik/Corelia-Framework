@@ -41,7 +41,7 @@ class AdminController extends BaseController
 
         $installedModules = $this->getAllInstalledModules();
         $modulesMarketplace = $this->getAllModulesMarket();
-
+        
         $installedModulesByKey = [];
         foreach ($installedModules as $mod) {
             if (isset($mod['key'])) {
@@ -49,16 +49,34 @@ class AdminController extends BaseController
             }
         }
 
+        $modulesData = [];
+
+        foreach ($modulesMarketplace as $marketplaceModule) {
+            $key = (string)$marketplaceModule['key'];
+            $isInstalled = array_key_exists($key, $installedModulesByKey);
+            $isEnabled = $isInstalled && !empty($installedModulesByKey[$key]['enabled']);
+            $isAvailable = $marketplaceModule['status'] === 'available';
+            $isUnavailable = $marketplaceModule['status'] === 'unavailable';
+
+            $modulesData[] = [
+                'marketplaceModule' => $marketplaceModule,
+                'isInstalled'       => $isInstalled,
+                'isEnabled'         => $isEnabled,
+                'isAvailable'       => $isAvailable,
+                'isUnavailable'     => $isUnavailable,
+            ];
+        }
+
+        $stats = [
+            "enabled"       => $this->countEnabledModules(true),
+            "disabled"      => $this->countEnabledModules(false),
+            "available"     => $this->countAvailablesModulesMarket(),
+            "unavailable"   => $this->countUnavailableModulesMarket()
+        ];
+
         return [
-            "stats" => [
-                "enabled"       => $this->countEnabledModules( true ),
-                "disabled"      => $this->countEnabledModules( false ),
-                "available"     => $this->countAvailablesModulesMarket(),
-                "unavailable"   => $this->countUnavailableModulesMarket()
-            ],
-            'modulesMarketplace'    => $modulesMarketplace,
-            'installedModulesByKey' => $installedModulesByKey,
-            'installedModules'      => $this->getAllInstalledModules()
+            "stats" => $stats,
+            "modulesData" => $modulesData
         ];
     }
 
@@ -146,7 +164,7 @@ class AdminController extends BaseController
      */
     public function getAllModulesMarket(): array
     {
-        $modulesMarketPlace    = 'https://raw.githubusercontent.com/BenjiLeLoustik/Corelia-Extras/refs/heads/main/modules.json';
+        $modulesMarketPlace    = 'https://benjileloustik.github.io/Corelia-Extras/modules.json';
         $modulesMarketPlace    = json_decode( file_get_contents( $modulesMarketPlace ), true );
         return $modulesMarketPlace;
     }
