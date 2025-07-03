@@ -1,252 +1,131 @@
-# 📖 Guide d’utilisation du framework Corelia
+# 📚 Documentation CoreliaPHP
 
-Ce guide explique comment utiliser chaque partie du framework Corelia :  
-structure des fichiers, modules, contrôleurs, templates, CLI, bonnes pratiques, etc.
+## 📖 Table des matières
 
----
+1. [🚀 Présentation générale](#présentation-générale)
+2. [📁 Structure des dossiers](#structure-des-dossiers)
+3. [🔄 Cycle de vie d’une requête](#cycle-de-vie-dune-requête)
+4. [🧩 Modules](#modules)
+5. [🛣️ Routing](#routing)
+6. [🧑‍💻 Contrôleurs](#contrôleurs)
+7. [🎨 Templates](#templates)
+8. [🎯 Gestion des événements](#gestion-des-événements)
+9. [📦 Réponses HTTP](#réponses-http)
+10. [💻 CLI (Command Line Interface)](#cli-command-line-interface)
+11. [📝 Exemples pratiques](#exemples-pratiques)
+12. [💡 Bonnes pratiques & extensions](#bonnes-pratiques--extensions)
 
-## 📁 1. Structure du projet
+## 🚀 Présentation générale
 
-```
-/src
-├── /Controllers
-│   ├── HomeController.php
-│   └── AdminController.php
-├── /Modules
-│   ├── /Logger
-│   │   ├── LoggerModule.php
-│   │   ├── config.json
-│   │   └── views/
-│   ├── /Cache
-│   │   ├── CacheModule.php
-│   │   ├── config.json
-│   │   └── views/
-│   └── ... (autres modules)
-├── /Template
-│   └── CoreliaTemplate.php
-├── /Views
-│   ├── base.html.twig
-│   ├── welcome.ctpl
-│   └── /admin
-│       └── modules.ctpl
-│       └── ... (autres templates admin)
-├── /cli
-│   └── corelia
-/public
-└── /assets
-    ├── /css
-    └── /js
-```
+CoreliaPHP est un micro-framework PHP modulaire, moderne et extensible.  
+Il propose :
+- Un système de modules activables/désactivables
+- Un routing avancé (attributs PHP 8+, config JSON)
+- Un moteur de templates simple et efficace
+- Un CLI pour automatiser la gestion des modules et contrôleurs
+- Une architecture claire et commentée, idéale pour apprendre ou démarrer rapidement un projet web.
 
-### 📂 Détail des dossiers/fichiers
+## 📁 Structure des dossiers
 
-- 🧑‍💻 **/src/Controllers/** : Contrôleurs PHP (une classe par page ou groupe de routes)
-- 🧩 **/src/Modules/** : Modules autonomes (fonctionnalités réutilisables, activables/désactivables)
-- 🖋️ **/src/Template/CoreliaTemplate.php** : Moteur de template principal
-- 🖼️ **/src/Views/** : Templates globaux (base, accueil, admin, etc.)
-- 🖥️ **/cli/corelia** : Script CLI pour la gestion du framework
-- 📦 **/public/assets/** : Fichiers statiques (CSS, JS, images)
+L’arborescence d’un projet CoreliaPHP ressemble à ceci :
 
----
+- `/core/` : Cœur du framework (événements, HTTP, modules, routing, templates, kernel)
+- `/modules/` : Vos modules personnalisés (un dossier par module)
+- `/src/Controller/` : Contrôleurs principaux de l’application
+- `/src/Views/` : Templates `.ctpl`
+- `/src/routes.php` : Déclaration des routes
+- `/vendor/` : Dépendances Composer
+- `.env` : Variables d’environnement
+- `corelia` : CLI principal
 
-## 🔧 2. Les modules
+## 🔄 Cycle de vie d’une requête
 
-Chaque module est un dossier dans `/src/Modules/` contenant :
+1. **Entrée** : Le Kernel reçoit la requête HTTP.
+2. **Chargement des modules** : Activation, résolution des dépendances, chargement des routes.
+3. **Routing** : Recherche de la route correspondante (attributs ou config).
+4. **Contrôleur** : Exécution de la méthode du contrôleur.
+5. **Réponse** : Génération de la réponse (HTML, JSON, redirection…).
+6. **Templates** : Si besoin, rendu du template avec les données.
+7. **Sortie** : Envoi de la réponse au client.
 
-- 📄 **config.json** : Métadonnées, statut, dépendances
-- 🗂️ **NomModule.php** : Classe principale du module
-- 🖼️ **views/** : Templates spécifiques au module
+## 🧩 Modules
 
-**Exemple de config.json** :
+- Un module est un dossier dans `/modules/` contenant un `config.json`, des contrôleurs, et des vues.
+- L’activation/désactivation se fait via le CLI ou en modifiant la clé `enabled` dans `config.json`.
+- Les dépendances sont automatiquement vérifiées et résolues entre modules.
+- Les routes d’un module peuvent être déclarées dans `config.json` ou via des attributs dans les contrôleurs.
 
-```
-{
-    "name": "Logger",
-    "version": "1.2.0",
-    "description": "Composant de journalisation.",
-    "status": "enabled"
-}
-```
+## 🛣️ Routing
 
-**Exemple de classe module** :
+- **Par attributs** (recommandé) : Utilisez les attributs PHP 8+ dans vos contrôleurs pour déclarer les routes.
+- **Par configuration** : Ajoutez les routes dans le `config.json` d’un module ou dans `src/routes.php`.
 
-```
-class LoggerModule {
-    public function boot() {
-        // Initialisation du module
-    }
-}
-```
+## 🧑‍💻 Contrôleurs
 
----
+- Les contrôleurs sont placés dans `/src/Controller/` ou dans le dossier de votre module.
+- Ils héritent généralement de `BaseController`.
+- Les méthodes publiques annotées avec `RouteAttribute` deviennent des actions accessibles via une URL.
 
-## 🛣️ 3. Les contrôleurs
+## 🎨 Templates
 
-Un contrôleur gère une route.  
-Exemple : `/src/Controllers/HomeController.php`
+- Les templates `.ctpl` sont placés dans `/src/Views/` ou dans le dossier `Views` d’un module.
+- Utilisez l’héritage de templates pour factoriser votre HTML (ex : `base.ctpl`).
+- Les blocs principaux sont : `title`, `meta_description`, `style`, `h1`, `content`, `script`, etc.
+- Les templates sont compatibles avec les bonnes pratiques SEO (balises meta, title, canonical, etc.).
 
-```
-use Corelia\Template\CoreliaTemplate;
+## 🎯 Gestion des événements
 
-class HomeController {
-    public function index() {
-        $tpl = new CoreliaTemplate(DIR . '/../Views/welcome.ctpl');
-        echo $tpl->render([
-            'user' => ['name' => 'Alice', 'role' => 'admin'],
-            'modules' => $this->getModules()
-        ]);
-    }
-}
-```
+- Utilisez le gestionnaire d’événements (`EventDispatcher`) pour ajouter des listeners et déclencher des événements personnalisés dans vos modules ou contrôleurs.
+- Permet d’étendre le comportement du framework sans modifier son cœur.
 
----
+## 📦 Réponses HTTP
 
-## 🖋️ 4. Les templates (CoreliaTemplate)
+- Plusieurs types de réponses sont disponibles :
+  - **Response** : réponse HTML classique
+  - **JsonResponse** : réponse JSON pour les APIs
+  - **RedirectResponse** : redirection HTTP
 
-### Syntaxe Twig-like
+## 💻 CLI (Command Line Interface)
 
-- 🔤 **Variables** : `{{ user.name }}`
-- 🔄 **Boucles** :
+Lancez la commande suivante pour afficher l’aide :
 
 ```
-{% for module in modules %}
-    {{ module.name }}
-    {% if loop.first %}[Premier]{% endif %}
-{% endfor %}
+php corelia help
 ```
 
-- 🔀 **Conditions** :
+Commandes principales :
+- `module:list` — Liste les modules
+- `module:enable <module>` — Active un module
+- `module:disable <module>` — Désactive un module
+- `make:module <name>` — Crée un nouveau module
+- `make:controller <module> <name>` — Crée un contrôleur
 
-```
-{% if module.status in ["enabled", "available"] %}{% endif %}
-```
+## 📝 Exemples pratiques
 
-- 📝 **Définition de variables** :
+### Créer une nouvelle page
 
-```
-{% set titre = "Bienvenue" %}
-{% set modules = [
-    {"name": "Logger", "status": "enabled"},
-    {"name": "Cache", "status": "disabled"}
-] %}
-```
+1. Créez un contrôleur dans `/src/Controller/`
+2. Déclarez la route correspondante (attribut ou config)
+3. Créez le template dans `/src/Views/`
 
-- 🎨 **Filtres** : `upper`, `lower`, `date`, `raw`
+### Créer un module
 
-```
-{{ user.name|upper }}
-{{ now|date("d/m/Y") }}
-```
+1. Utilisez la commande CLI `php corelia make:module Blog`
+2. Personnalisez le contrôleur et les vues du module
+3. Activez le module avec `php corelia module:enable Blog` si besoin
 
-- 📚 **Blocs et héritage** :
+## 💡 Bonnes pratiques & extensions
 
-```
-{% extends 'base.html.twig' %}
-{% block content %}...{% endblock %}
-```
+- **Sécurité** : Validez et nettoyez toutes les entrées utilisateur.
+- **Tests** : Ajoutez des tests unitaires pour vos modules et routes critiques.
+- **Performance** : Utilisez le cache pour les routes et la configuration si nécessaire.
+- **Extensibilité** : Ajoutez des middlewares, services, ou étendez le moteur de template selon vos besoins.
 
-- ➕ **Include** :
+## 🚦 Pour aller plus loin
 
-```
-{% include 'admin/sidebar.ctpl' %}
-```
+- Ajoutez des middlewares pour la gestion des accès ou des logs.
+- Créez vos propres filtres pour le moteur de template.
+- Intégrez un ORM ou un système de migration si besoin.
 
-- 💬 **Commentaires** :
-
-```
-{# Ceci est un commentaire #}
-```
-
-**Important** : Les objets/tableaux dans `{% set ... = ... %}` doivent être du JSON valide.
-
----
-
-## 🖥️ 5. Interface d’administration
-
-- 🧭 **Templates** dans `/src/Views/admin/`
-- 📋 **Sidebar, statuts, actions modules** : tout est dynamique via le template
-- 🎛️ **Exemple** :
-
-```
-{% for module in modules %}
-    <div class="module-card {{ module.status }}">
-    <h3>{{ module.name }}</h3>
-    <span>{{ module.status|upper }}</span>
-    {% if module.status == "enabled" %}
-        <button>Désactiver</button>
-    {% elseif module.status == "available" %}
-        <button>Installer</button>
-    {% endif %}
-    </div>
-{% endfor %}
-```
-
----
-
-## 🖥️ 6. Utilisation de la CLI
-
-Le script `/cli/corelia` permet de gérer le framework en ligne de commande.
-
-**Commandes disponibles** :
-
-- 📋 `corelia module:list` — Liste tous les modules et leurs statuts
-- ✅ `corelia module:enable Logger` — Active le module Logger
-- ❌ `corelia module:disable Logger` — Désactive le module Logger
-- 🧹 `corelia cache:clear` — Vide le cache
-- 🚀 `corelia migrate` — Exécute les migrations
-
-**Exemple d’utilisation** :
-
-```
-php cli/corelia module:list
-php cli/corelia module:enable Logger
-```
-
----
-
-## 🧑‍💼 7. Bonnes pratiques
-
-- 🧩 **Modules** : autonomes, bien documentés, pas de dépendance cyclique
-- 🔤 **Templates** : objets dans `{% set ... = ... %}` toujours en JSON valide
-- 🛠️ **Contrôleurs** : une classe par page/groupe de routes, code clair
-- 💬 **CLI** : commandes explicites, messages clairs
-- 🗂️ **Organisation** : dossiers logiques, noms de fichiers explicites
-
----
-
-## 🧪 8. Exemple de projet minimal
-
-```
-/src
-├── /Controllers
-│   └── HomeController.php
-├── /Modules
-│   └── /Logger
-│       ├── LoggerModule.php
-│       ├── config.json
-│       └── views/
-│           └── info.ctpl
-├── /Template
-│   └── CoreliaTemplate.php
-├── /Views
-│   └── welcome.ctpl
-/cli
-└── corelia
-/public
-└── /assets
-    └── /css
-        └── style.css
-```
-
----
-
-## ⚠️ 9. Limitations connues
-
-- 🚫 Les macros Twig, imports, filtres personnalisés ne sont pas supportés nativement.
-- 📜 Les objets dans `{% set ... = ... %}` doivent être du JSON valide.
-- 🧩 Les modules doivent être bien isolés.
-
----
-
-Pour toute question ou contribution, consultez le code source ou contactez l’équipe Corelia.  
-✨ Bon développement avec Corelia !
+**Besoin d’un exemple ou d’un guide sur une fonctionnalité précise ?**  
+N’hésitez pas à demander ! 🚀
