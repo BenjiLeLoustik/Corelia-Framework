@@ -2,6 +2,7 @@
 
 /* ===== /public/index.php ===== */
 
+
 /**
  * Point d'entrée principal de l'application Corelia.
  * Initialise l'autoloader et démarre le noyau (Kernel).
