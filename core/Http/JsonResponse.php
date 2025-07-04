@@ -13,8 +13,8 @@ class JsonResponse extends Response
     /**
      * Constructeur.
      *
-     * @param mixed $data               Données à encoder en JSON et à envoyer dans la réponse
-     * @param int   $statusCode         Code HTTP de la réponse (par défaut 200)
+     * @param mixed $data       Données à encoder en JSON et à envoyer dans la réponse.
+     * @param int   $statusCode Code HTTP de la réponse (par défaut 200).
      */
     public function __construct($data = [], int $statusCode = 200)
     {

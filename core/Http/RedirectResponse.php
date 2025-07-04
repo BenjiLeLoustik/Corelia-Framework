@@ -11,7 +11,7 @@ namespace Corelia\Http;
 class RedirectResponse extends Response
 {
     /**
-     * Constructeur.
+     * Constructeur de la réponse de redirection.
      *
      * @param string $url        URL de redirection
      * @param int    $statusCode Code HTTP de redirection (par défaut 302)
@@ -25,12 +25,13 @@ class RedirectResponse extends Response
 
     /**
      * Envoie la réponse de redirection et termine le script.
+     * Les headers sont envoyés, aucun contenu n'est affiché.
+     *
+     * @return void
      */
     public function send(): void
     {
-        // Envoi des headers définis dans la classe Response
         parent::sendHeaders();
-
         // Pour une redirection, il n'y a généralement pas de contenu
         exit;
     }

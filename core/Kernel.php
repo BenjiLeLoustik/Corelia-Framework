@@ -26,14 +26,15 @@ class Kernel
     protected array $config = [];
 
     /**
-     * Gestionnaire d'événements Corelia
+     * Gestionnaire d'événements Corelia.
      * @var EventDispatcher
      */
     protected EventDispatcher $eventDispatcher;
 
     /**
-     * Constructeur.
-     * Initialise le noyau, charge la configuration et les services principaux.
+     * Constructeur du Kernel.
+     * Initialise le noyau, configure le reporting des erreurs, charge la configuration
+     * d'environnement et instancie le gestionnaire d'événements.
      */
     public function __construct()
     {
@@ -43,7 +44,10 @@ class Kernel
     }
 
     /**
-     * Configure le reporting des erreurs PHP.
+     * Configure le reporting des erreurs PHP pour le développement.
+     * Affiche toutes les erreurs et les erreurs de démarrage.
+     *
+     * @return void
      */
     protected function setupErrorReporting(): void
     {
@@ -54,8 +58,10 @@ class Kernel
 
     /**
      * Charge les variables d'environnement depuis le fichier .env.
-     * Remplit $this->config et $_ENV.
+     * Remplit $this->config et $_ENV pour l'application.
+     *
      * @throws \RuntimeException si le fichier .env est absent
+     * @return void
      */
     protected function loadEnv(): void
     {
@@ -77,16 +83,19 @@ class Kernel
     }
 
     /**
-     * Point d'entrée principal : traite la requête HTTP.
-     * Résout la route, exécute le contrôleur, gère le rendu et les réponses.
+     * Point d'entrée principal du framework.
+     * Traite la requête HTTP, résout la route, exécute le contrôleur ciblé,
+     * gère le rendu (template, JSON, Response) et envoie la réponse au client.
+     *
+     * @return void
      */
     public function handle(): void
     {
-        $request    = new Request();
-        $response   = new Response();
-        $router     = new Router();
+        $request  = new Request();
+        $response = new Response();
+        $router   = new Router();
 
-        // 1. Routes des contrôleurs "app" (src/Controller)
+        // Découverte automatique des routes via les attributs des contrôleurs (src/Controller)
         $controllersPath = __DIR__ . '/../src/Controller/';
         foreach (glob($controllersPath . '*Controller.php') as $file) {
             $className = "App\\Controller\\" . basename($file, '.php');
@@ -102,13 +111,14 @@ class Kernel
                     $router->add(
                         $routeAttr->methods,
                         $routeAttr->path,
-                        [$className, $method->getName()]
+                        [$className, $method->getName()],
+                        $routeAttr->name
                     );
                 }
             }
         }
 
-        // 2. Matching et exécution
+        // Recherche de la route correspondante
         $match = $router->match($request);
 
         if ($match) {
@@ -119,78 +129,61 @@ class Kernel
             if (class_exists($controllerClass)) {
                 $controller = new $controllerClass();
 
+                // Injection éventuelle du gestionnaire d'événements
                 if (method_exists($controller, 'setEventDispatcher')) {
                     $controller->setEventDispatcher($this->eventDispatcher);
                 }
 
                 if (method_exists($controller, $method)) {
-                    // Récupère les attributs de la méthode pour gérer template/JSON
-                    $reflection = new \ReflectionMethod($controllerClass, $method);
-                    $routeAttrs = $reflection->getAttributes(RouteAttribute::class);
-
-                    $template = null;
-                    $responseType = null;
-                    if ($routeAttrs) {
-                        $routeAttr = $routeAttrs[0]->newInstance();
-                        $template = $routeAttr->template ?? null;
-                        $responseType = $routeAttr->response ?? null;
-                    }
-
+                    // Appel de la méthode du contrôleur
                     $result = call_user_func_array([$controller, $method], $params);
 
-                    // Si un template est défini et que la méthode retourne un tableau, on fait le rendu
-                    if ($template && is_array($result)) {
-                        $templatePath = $this->resolveTemplatePath($template);
-
-                        $tpl = new CoreliaTemplate($templatePath);
-                        $html = $tpl->render($result);
-                        echo $html;
-                        return;
-                    }
-
-                    // Si une réponse JSON est demandée et que la méthode retourne un tableau
-                    if ($responseType === 'jsonResponse' && is_array($result)) {
-                        $json = new JsonResponse($result);
-                        $json->send();
-                        return;
-                    }
-
-                    // Si le contrôleur retourne un objet Response (ou hérité), on l'envoie
+                    // Vérifie que la méthode retourne bien un objet Response (ou dérivé)
                     if ($result instanceof Response) {
                         $result->send();
                         return;
                     }
 
-                    // Sinon, on considère que c'est du contenu brut
-                    $response->setStatusCode(200)->setContent((string)$result)->send();
+                    // Si ce n'est pas un objet Response, erreur explicite
+                    $response->setStatusCode(500)->setContent(
+                        "Erreur : le contrôleur doit retourner un objet Response, JsonResponse ou RedirectResponse."
+                    )->send();
                     return;
                 } else {
-                    $response->setStatusCode(404)->setContent("Méthode '{$method}' introuvable dans le contrôleur.")->send();
+                    $response->setStatusCode(404)->setContent(
+                        "Méthode '{$method}' introuvable dans le contrôleur."
+                    )->send();
                     return;
                 }
             } else {
-                $response->setStatusCode(404)->setContent("Contrôleur '{$controllerClass}' introuvable.")->send();
+                $response->setStatusCode(404)->setContent(
+                    "Contrôleur '{$controllerClass}' introuvable."
+                )->send();
                 return;
             }
         }
-        // Fallback : page d'accueil par défaut
-        $response->setStatusCode(200)->setContent($this->renderWelcomePage())->send();
+
+        // Si aucune route ne correspond, affiche la page d'accueil ou 404
+        $response->setStatusCode(404)->setContent($this->renderWelcomePage())->send();
     }
 
     /**
      * Résout le chemin absolu d'un template selon la convention Corelia (sans modules).
-     * @param string $template          Nom du template (ex: 'Admin/dashboard.ctpl')
-     * @return string                   Chemin absolu du template
+     *
+     * @param string $template  Nom du template (ex: 'Admin/dashboard.ctpl')
+     * @return string           Chemin absolu du template
      */
     protected function resolveTemplatePath(string $template): string
     {
-        // Uniquement dans src/Views/
+        // Recherche uniquement dans src/Views/
         return __DIR__ . "/../src/Views/{$template}";
     }
 
     /**
-     * Rend la page d'accueil par défaut si aucune route ne correspond.
-     * @return string                   HTML de bienvenue
+     * Rend la page d'accueil ou la page 404 par défaut si aucune route ne correspond.
+     * Si le template notFound.ctpl existe, il est rendu, sinon un message HTML simple est affiché.
+     *
+     * @return string   HTML de bienvenue ou de page non trouvée
      */
     protected function renderWelcomePage(): string
     {
@@ -208,7 +201,8 @@ class Kernel
 
     /**
      * Retourne l'EventDispatcher utilisé par le Kernel.
-     * @return EventDispatcher
+     *
+     * @return EventDispatcher  Instance du gestionnaire d'événements
      */
     public function getEventDispatcher(): EventDispatcher
     {

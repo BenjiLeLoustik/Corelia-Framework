@@ -12,25 +12,25 @@ class Request
 {
     /**
      * Données GET ($_GET)
-     * @var array
+     * @var array<string, mixed>
      */
     protected array $get;
 
     /**
      * Données POST ($_POST)
-     * @var array
+     * @var array<string, mixed>
      */
     protected array $post;
 
     /**
      * Données serveur ($_SERVER)
-     * @var array
+     * @var array<string, mixed>
      */
     protected array $server;
 
     /**
      * Entêtes HTTP parsées (clés en minuscules)
-     * @var array
+     * @var array<string, string>
      */
     protected array $headers;
 
@@ -55,8 +55,9 @@ class Request
 
     /**
      * Récupère une variable GET.
-     * @param string $key       Nom de la variable
-     * @param mixed  $default   Valeur par défaut si non trouvée
+     *
+     * @param string $key     Nom de la variable
+     * @param mixed  $default Valeur par défaut si non trouvée
      * @return mixed
      */
     public function get(string $key, $default = null)
@@ -66,8 +67,9 @@ class Request
 
     /**
      * Récupère une variable POST.
-     * @param string $key       Nom de la variable
-     * @param mixed  $default   Valeur par défaut si non trouvée
+     *
+     * @param string $key     Nom de la variable
+     * @param mixed  $default Valeur par défaut si non trouvée
      * @return mixed
      */
     public function post(string $key, $default = null)
@@ -77,8 +79,9 @@ class Request
 
     /**
      * Récupère une variable serveur.
-     * @param string $key       Nom de la variable serveur (ex: REQUEST_URI)
-     * @param mixed  $default   Valeur par défaut si non trouvée
+     *
+     * @param string $key     Nom de la variable serveur (ex: REQUEST_URI)
+     * @param mixed  $default Valeur par défaut si non trouvée
      * @return mixed
      */
     public function server(string $key, $default = null)
@@ -88,8 +91,9 @@ class Request
 
     /**
      * Récupère un header HTTP (insensible à la casse).
-     * @param string $key       Nom du header (ex: 'Authorization')
-     * @param mixed  $default   Valeur par défaut si non trouvé
+     *
+     * @param string $key     Nom du header (ex: 'Authorization')
+     * @param mixed  $default Valeur par défaut si non trouvé
      * @return mixed
      */
     public function header(string $key, $default = null)
@@ -102,9 +106,10 @@ class Request
      * Parse les headers HTTP à partir de $_SERVER.
      * Garde les clés en minuscules pour faciliter l'accès.
      * Ajoute aussi Content-Type et Content-Length si présents.
-     * @return array            Tableau associatif des headers HTTP
+     *
+     * @return array<string, string> Tableau associatif des headers HTTP
      */
-    public function parseHeaders(): array
+    protected function parseHeaders(): array
     {
         $headers = [];
         foreach ($this->server as $key => $value) {
@@ -126,6 +131,7 @@ class Request
 
     /**
      * Récupère la méthode HTTP de la requête (GET, POST, PUT, etc.)
+     *
      * @return string
      */
     public function method(): string
@@ -135,6 +141,7 @@ class Request
 
     /**
      * Récupère l'URI demandée dans la requête.
+     *
      * @return string
      */
     public function uri(): string
@@ -144,6 +151,7 @@ class Request
 
     /**
      * Retourne le corps brut de la requête (utile pour JSON, PUT, etc.).
+     *
      * @return string|null
      */
     public function rawBody(): ?string
@@ -153,7 +161,8 @@ class Request
 
     /**
      * Retourne le corps décodé en tableau si Content-Type = application/json.
-     * @return array|null
+     *
+     * @return array<string, mixed>|null
      */
     public function json(): ?array
     {
@@ -166,7 +175,8 @@ class Request
 
     /**
      * Récupère tous les paramètres GET.
-     * @return array
+     *
+     * @return array<string, mixed>
      */
     public function allGet(): array
     {
@@ -175,7 +185,8 @@ class Request
 
     /**
      * Récupère tous les paramètres POST.
-     * @return array
+     *
+     * @return array<string, mixed>
      */
     public function allPost(): array
     {
@@ -184,7 +195,8 @@ class Request
 
     /**
      * Récupère tous les headers HTTP.
-     * @return array
+     *
+     * @return array<string, string>
      */
     public function allHeaders(): array
     {

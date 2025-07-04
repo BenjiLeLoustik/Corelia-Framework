@@ -26,17 +26,35 @@ class Router
      * @param array        $handler  Tableau [Classe, méthode] du contrôleur
      * @return self
      */
-    public function add($methods, string $path, $handler): self
+    public function add( $methods, string $path, $handler, ?string $name = null ): self
     {
         $path = '/' . trim($path, '/');
         foreach ((array)$methods as $method) {
             $this->routes[] = [
-                'method'  => strtoupper($method),
-                'path'    => $path,
-                'handler' => $handler
+                'method'    => strtoupper($method),
+                'path'      => $path,
+                'handler'   => $handler,
+                'name'      => $name
             ];
         }
         return $this;
+    }
+    
+
+    /**
+     * Recherche et retourne une route à partir de son nom.
+     *
+     * @param string $name   Nom unique de la route (défini dans l'attribut RouteAttribute)
+     * @return Route|null    Objet Route correspondant ou null si aucune route ne correspond
+     */
+    public function getRouteByName( string $name ): ?Route
+    {
+        foreach( $this->routes as $route ){
+            if( isset( $route['name'] ) && $route['name'] === $name ){
+                return new Route( $route['path'], $route['handler'][0], $route['handler'][1] );
+            }
+        }
+        return null;
     }
 
     /**

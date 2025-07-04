@@ -5,8 +5,9 @@
 namespace Corelia\Http;
 
 /**
- * Classe pour gérer une réponse HTTP.
- * Permet d'envoyer des headers, du contenu, gérer les codes HTTP, etc.
+ * Classe de base pour gérer une réponse HTTP.
+ * Permet de définir le code de statut, les headers et le contenu,
+ * puis d'envoyer la réponse complète au client.
  */
 class Response
 {
@@ -18,7 +19,7 @@ class Response
 
     /**
      * Tableau associatif des headers HTTP à envoyer
-     * @var array
+     * @var array<string, string>
      */
     protected array $headers = [];
 
@@ -30,7 +31,8 @@ class Response
 
     /**
      * Définit le code HTTP de la réponse.
-     * @param int $code             Code HTTP (ex: 200, 404)
+     *
+     * @param int $code Code HTTP (ex: 200, 404)
      * @return self
      */
     public function setStatusCode(int $code): self
@@ -40,9 +42,20 @@ class Response
     }
 
     /**
-     * Ajoute un header HTTP à la réponse.
-     * @param string $name          Nom du header (ex: Content-Type)
-     * @param string $value         Valeur du header
+     * Retourne le code HTTP actuel de la réponse.
+     *
+     * @return int
+     */
+    public function getStatusCode(): int
+    {
+        return $this->statusCode;
+    }
+
+    /**
+     * Ajoute ou remplace un header HTTP à la réponse.
+     *
+     * @param string $name  Nom du header (ex: Content-Type)
+     * @param string $value Valeur du header
      * @return self
      */
     public function addHeader(string $name, string $value): self
@@ -52,8 +65,19 @@ class Response
     }
 
     /**
+     * Retourne tous les headers HTTP définis.
+     *
+     * @return array<string, string>
+     */
+    public function getHeaders(): array
+    {
+        return $this->headers;
+    }
+
+    /**
      * Définit le contenu de la réponse.
-     * @param string $content       Contenu à envoyer (HTML, JSON, etc.)
+     *
+     * @param string $content Contenu à envoyer (HTML, JSON, etc.)
      * @return self
      */
     public function setContent(string $content): self
@@ -63,7 +87,19 @@ class Response
     }
 
     /**
-     * Envoie tous les headers HTTP stockés.
+     * Retourne le contenu de la réponse.
+     *
+     * @return string
+     */
+    public function getContent(): string
+    {
+        return $this->content;
+    }
+
+    /**
+     * Envoie tous les headers HTTP stockés, ainsi que le code de statut.
+     *
+     * @return void
      */
     public function sendHeaders(): void
     {
@@ -72,13 +108,16 @@ class Response
 
         // Headers
         foreach ($this->headers as $name => $value) {
-            header("$name: $value");
+            // Pour éviter les doublons de header
+            header("$name: $value", true);
         }
     }
 
     /**
      * Envoie la réponse HTTP complète (headers + contenu).
      * Affiche le contenu au client.
+     *
+     * @return void
      */
     public function send(): void
     {

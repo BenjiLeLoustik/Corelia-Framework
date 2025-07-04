@@ -5,38 +5,67 @@ namespace App\Controller;
 
 use Corelia\Controller\BaseController;
 use Corelia\Routing\RouteAttribute;
+use Corelia\Http\Response;
+use Corelia\Http\JsonResponse;
+use Corelia\Http\RedirectResponse;
 
 /**
  * Contrôleur principal de l'application.
- * Étend le contrôleur de base Corelia pour gérer les routes et le rendu.
+ * Illustre la gestion de différents types de réponses HTTP.
  */
 class HomeController extends BaseController
 {
     /**
-     * Route principale '/' qui rend le template 'home/index.ctpl'.
+     * Page d'accueil (HTML).
      *
-     * @return array Données à passer au template (ex: username, modules)
+     * @return Response
      */
-    #[RouteAttribute(path: '/', template: 'home/index.ctpl')]
-    public function index(): array
+    #[RouteAttribute(path: '/', name: 'home.index', methods: ['GET'])]
+    public function index(): Response
     {
-        return [
+        return $this->render('Home/index.ctpl', [
             'username' => 'Alice',
-            'modules' => ['Blog', 'Shop', 'Forum'],
-        ];
+            'modules'  => ['Blog', 'Shop', 'Forum'],
+        ]);
     }
 
     /**
-     * Route API '/api/ping' qui retourne une réponse JSON.
+     * API ping (JSON).
      *
-     * @return array Données JSON retournées (status, date actuelle)
+     * @return JsonResponse
      */
-    #[RouteAttribute(path: '/api/ping', response: 'jsonResponse')]
-    public function ping(): array
+    #[RouteAttribute(path: '/api/ping', name: 'api.ping', methods: ['GET'])]
+    public function ping(): JsonResponse
     {
-        return [
+        return $this->json([
             'status' => 'ok',
-            'now' => date('c'),
-        ];
+            'now'    => date('c'),
+        ]);
+    }
+
+    /**
+     * Redirection HTTP vers l'accueil.
+     *
+     * @return RedirectResponse
+     */
+    #[RouteAttribute(path: '/go-home', name: 'redirect.home', methods: ['GET'])]
+    public function goHome(): RedirectResponse
+    {
+        return $this->redirect('/');
+    }
+
+    /**
+     * Téléchargement d'un fichier texte.
+     *
+     * @return Response
+     */
+    #[RouteAttribute(path: '/download', name: 'download.text', methods: ['GET'])]
+    public function download(): Response
+    {
+        $response = new Response();
+        $response->addHeader('Content-Type', 'text/plain; charset=utf-8')
+                 ->addHeader('Content-Disposition', 'attachment; filename="demo.txt"')
+                 ->setContent("Ceci est le contenu du fichier de démo.");
+        return $response;
     }
 }
