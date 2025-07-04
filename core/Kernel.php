@@ -5,7 +5,6 @@
 namespace Corelia;
 
 use Corelia\Event\EventDispatcher;
-use Corelia\Module\ModuleManager;
 use Corelia\Http\Request;
 use Corelia\Http\Response;
 use Corelia\Http\JsonResponse;
@@ -16,21 +15,15 @@ use Corelia\Template\CoreliaTemplate;
 /**
  * Noyau principal (Kernel) de Corelia.
  * Gère l'initialisation, la configuration, le routing et l'exécution de la requête HTTP.
+ * Version sans gestion de modules.
  */
 class Kernel
 {
-    
     /**
      * Configuration chargée depuis .env
      * @var array
      */
     protected array $config = [];
-
-    /**
-     * Gestionnaire des modules Corelia
-     * @var ModuleManager
-     */
-    protected ModuleManager $moduleManager;
 
     /**
      * Gestionnaire d'événements Corelia
@@ -46,8 +39,7 @@ class Kernel
     {
         $this->setupErrorReporting();
         $this->loadEnv();
-        $this->moduleManager    = new ModuleManager(__DIR__ . '/../modules');
-        $this->eventDispatcher  = new EventDispatcher();
+        $this->eventDispatcher = new EventDispatcher();
     }
 
     /**
@@ -63,7 +55,7 @@ class Kernel
     /**
      * Charge les variables d'environnement depuis le fichier .env.
      * Remplit $this->config et $_ENV.
-     * @throws                          \RuntimeException si le fichier .env est absent
+     * @throws \RuntimeException si le fichier .env est absent
      */
     protected function loadEnv(): void
     {
@@ -94,10 +86,7 @@ class Kernel
         $response   = new Response();
         $router     = new Router();
 
-        // 1. Routes des modules (attributs et config.json)
-        $this->moduleManager->registerModulesRoutes($router);
-
-        // 2. Routes des contrôleurs "app" (src/Controller)
+        // 1. Routes des contrôleurs "app" (src/Controller)
         $controllersPath = __DIR__ . '/../src/Controller/';
         foreach (glob($controllersPath . '*Controller.php') as $file) {
             $className = "App\\Controller\\" . basename($file, '.php');
@@ -119,7 +108,7 @@ class Kernel
             }
         }
 
-        // 3. Matching et exécution
+        // 2. Matching et exécution
         $match = $router->match($request);
 
         if ($match) {
@@ -148,14 +137,13 @@ class Kernel
                     }
 
                     $result = call_user_func_array([$controller, $method], $params);
-                    
+
                     // Si un template est défini et que la méthode retourne un tableau, on fait le rendu
                     if ($template && is_array($result)) {
                         $templatePath = $this->resolveTemplatePath($template);
 
                         $tpl = new CoreliaTemplate($templatePath);
                         $html = $tpl->render($result);
-                        error_log("RENDERED HTML: " . substr($html, 0, 200));
                         echo $html;
                         return;
                     }
@@ -190,18 +178,13 @@ class Kernel
     }
 
     /**
-     * Résout le chemin absolu d'un template selon la convention Corelia.
-     * @param string $template          Nom du template (ex: 'Admin::dashboard.ctpl')
+     * Résout le chemin absolu d'un template selon la convention Corelia (sans modules).
+     * @param string $template          Nom du template (ex: 'Admin/dashboard.ctpl')
      * @return string                   Chemin absolu du template
      */
     protected function resolveTemplatePath(string $template): string
     {
-        if (strpos($template, '::') !== false) {
-            // Template module : ex 'Admin::dashboard.ctpl'
-            [$module, $tpl] = explode('::', $template, 2);
-            return __DIR__ . "/../modules/{$module}/Views/{$tpl}";
-        }
-        // Template app : ex 'welcome.ctpl'
+        // Uniquement dans src/Views/
         return __DIR__ . "/../src/Views/{$template}";
     }
 
@@ -230,14 +213,5 @@ class Kernel
     public function getEventDispatcher(): EventDispatcher
     {
         return $this->eventDispatcher;
-    }
-
-    /**
-     * Retourne le ModuleManager utilisé par le Kernel.
-     * @return ModuleManager
-     */
-    public function getModuleManager(): ModuleManager
-    {
-        return $this->moduleManager;
     }
 }

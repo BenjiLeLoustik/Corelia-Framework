@@ -8,16 +8,23 @@ use Corelia\Http\Request;
 
 /**
  * Routeur HTTP pour CoreliaPHP.
+ * Permet d'enregistrer des routes et de faire le matching avec une requête.
  */
 class Router
 {
+    /**
+     * Tableau des routes enregistrées.
+     * @var array
+     */
     protected array $routes = [];
 
     /**
-     * Ajoute une route.
-     * @param string|array $methods HTTP method(s) (GET, POST, etc.)
-     * @param string $path
-     * @param array $handler [Classe, méthode]
+     * Ajoute une route au routeur.
+     *
+     * @param string|array $methods  Méthode(s) HTTP (GET, POST, etc.)
+     * @param string       $path     Chemin de la route (ex: /admin/{id})
+     * @param array        $handler  Tableau [Classe, méthode] du contrôleur
+     * @return self
      */
     public function add($methods, string $path, $handler): self
     {
@@ -33,7 +40,10 @@ class Router
     }
 
     /**
-     * Tente de trouver une route correspondant à la requête.
+     * Recherche une route correspondant à la requête HTTP.
+     *
+     * @param Request $request
+     * @return Route|null  Objet Route si trouvé, sinon null
      */
     public function match(Request $request): ?Route
     {
@@ -43,11 +53,12 @@ class Router
         foreach ($this->routes as $route) {
             if ($route['method'] !== $reqMethod) continue;
 
+            // Remplace {param} par une capture regex
             $pattern = preg_replace('#\{[a-zA-Z_][a-zA-Z0-9_]*\}#', '([^/]+)', $route['path']);
             $pattern = '#^' . $pattern . '$#';
 
             if (preg_match($pattern, $reqPath, $matches)) {
-                array_shift($matches);
+                array_shift($matches); // Retire le match complet
                 $routeObj = new Route($route['path'], $route['handler'][0], $route['handler'][1]);
                 $routeObj->setParameters($matches);
                 return $routeObj;
@@ -57,11 +68,11 @@ class Router
     }
 
     /**
-     * Retourne toutes les routes enregistrées sous forme de tableau.
+     * Retourne toutes les routes enregistrées.
      * @return array
      */
     public function getAll(): array
     {
-        return $this->routes ?? [];
+        return $this->routes;
     }
 }

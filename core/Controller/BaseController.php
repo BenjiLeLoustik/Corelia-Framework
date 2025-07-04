@@ -1,7 +1,5 @@
 <?php
 
-/* ===== /core/Controller/BaseController.php ===== */
-
 namespace Corelia\Controller;
 
 use Corelia\Template\CoreliaTemplate;
@@ -13,40 +11,56 @@ use Corelia\Http\JsonResponse;
  */
 abstract class BaseController
 {
-    
     /**
      * Rend un template avec les variables fournies.
      * 
-     * @param string $template              Nom du template (ex: 'Admin::dashboard.ctpl' ou 'welcome.ctpl')
+     * @param string $template              Nom du template (ex: 'dashboard.ctpl' ou 'welcome.ctpl')
      * @param array $vars                   Variables à injecter dans le template
      * @return string                       HTML généré
      *
      * Convention :
-     *   - 'Admin::dashboard.ctpl' => /modules/Admin/Views/dashboard.ctpl
-     *   - 'welcome.ctpl'          => /src/Views/welcome.ctpl
+     *   - 'dashboard.ctpl' => /src/Views/dashboard.ctpl
+     *   - 'welcome.ctpl'   => /src/Views/welcome.ctpl
      */
     protected function render(string $template, array $vars = []): string
     {
-        $templatePath = $this->resolveTemplatePath($template);
-        $tpl = new CoreliaTemplate($templatePath);
-        return $tpl->render($vars);
+        error_log("[DEBUG] DEBUT render() avec template : $template");
+        try {
+            $templatePath = $this->resolveTemplatePath($template);
+            error_log("[DEBUG] Chemin template : $templatePath");
+            $tpl = new CoreliaTemplate($templatePath);
+            $result = $tpl->render($vars);
+            error_log("[DEBUG] Fin de render(), rendu effectué");
+            return $result;
+        } catch (\Throwable $e) {
+            error_log("[ERREUR] Exception dans render : " . $e->getMessage());
+            throw $e;
+        }
     }
 
     /**
-     * Résout le chemin absolu du template selon la convention Corelia.
+     * Résout le chemin absolu du template selon la convention globale Corelia.
      * 
-     * @param string $template              Nom du template (avec ou sans module)
+     * @param string $template              Nom du template (sans module)
      * @return string                       Chemin absolu du fichier template
      */
     protected function resolveTemplatePath(string $template): string
     {
-        if (strpos($template, '::') !== false) {
-            // Template module : ex 'Admin::dashboard.ctpl'
-            [$module, $tpl] = explode('::', $template, 2);
-            return __DIR__ . "/../../modules/{$module}/Views/{$tpl}";
+        $ds = DIRECTORY_SEPARATOR;
+        $projectRoot = dirname(__DIR__, 3);
+
+        error_log("[DEBUG] resolveTemplatePath appelée avec : $template");
+
+        // Uniquement la recherche dans /src/Views/
+        $globalPath = "{$projectRoot}{$ds}src{$ds}Views{$ds}{$template}";
+        error_log("[DEBUG] Chemin testé : $globalPath");
+        if (file_exists($globalPath)) {
+            error_log("[DEBUG] Trouvé : $globalPath");
+            return $globalPath;
         }
-        // Template app : ex 'welcome.ctpl'
-        return __DIR__ . "/../../src/Views/{$template}";
+
+        error_log("[DEBUG] Template introuvable : $template");
+        throw new \InvalidArgumentException("Template introuvable : {$template} (chemin testé : {$globalPath})");
     }
 
     /**
@@ -60,5 +74,4 @@ abstract class BaseController
     {
         return new JsonResponse($data, $status);
     }
-    
 }

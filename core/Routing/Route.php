@@ -10,7 +10,6 @@ namespace Corelia\Routing;
  */
 class Route
 {
-
     /**
      * Chemin de la route (ex: /admin/dashboard)
      * @var string
@@ -18,7 +17,7 @@ class Route
     protected string $path;
 
     /**
-     * Nom du contrôleur associé à la route
+     * Nom du contrôleur associé à la route (ex: 'AdminController')
      * @var string
      */
     protected string $controller;
@@ -37,9 +36,9 @@ class Route
 
     /**
      * Constructeur.
-     * @param string $path              Chemin de la route
-     * @param string $controller        Nom du contrôleur
-     * @param string $method            Méthode du contrôleur (défaut 'index')
+     * @param string $path        Chemin de la route (ex: '/admin/dashboard')
+     * @param string $controller  Nom du contrôleur (ex: 'AdminController')
+     * @param string $method      Méthode du contrôleur à appeler (défaut 'index')
      */
     public function __construct(string $path, string $controller, string $method = 'index')
     {
@@ -52,29 +51,44 @@ class Route
      * Retourne le chemin de la route.
      * @return string
      */
-    public function getPath(): string { return $this->path; }
+    public function getPath(): string
+    {
+        return $this->path;
+    }
 
     /**
      * Retourne le nom du contrôleur.
      * @return string
      */
-    public function getController(): string { return $this->controller; }
+    public function getController(): string
+    {
+        return $this->controller;
+    }
 
     /**
      * Retourne la méthode du contrôleur.
      * @return string
      */
-    public function getMethod(): string { return $this->method; }
+    public function getMethod(): string
+    {
+        return $this->method;
+    }
 
-     /**
+    /**
      * Retourne les paramètres de la route.
      * @return array
      */
-    public function getParameters(): array { return $this->parameters; }
+    public function getParameters(): array
+    {
+        return $this->parameters;
+    }
 
     /**
      * Définit les paramètres de la route.
      * @param array $params
      */
-    public function setParameters(array $params): void { $this->parameters = $params; }
+    public function setParameters(array $params): void
+    {
+        $this->parameters = $params;
+    }
 }

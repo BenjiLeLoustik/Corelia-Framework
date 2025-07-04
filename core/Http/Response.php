@@ -10,7 +10,6 @@ namespace Corelia\Http;
  */
 class Response
 {
-
     /**
      * Code HTTP de la réponse (ex: 200, 404, 500)
      * @var int
@@ -34,10 +33,9 @@ class Response
      * @param int $code             Code HTTP (ex: 200, 404)
      * @return self
      */
-    public function setStatusCode( int $code ): self
+    public function setStatusCode(int $code): self
     {
         $this->statusCode = $code;
-        http_response_code( $code );
         return $this;
     }
 
@@ -47,10 +45,9 @@ class Response
      * @param string $value         Valeur du header
      * @return self
      */
-    public function addHeader( string $name, string $value ): self
+    public function addHeader(string $name, string $value): self
     {
-        $this->headers[ $name ] = $value;
-        header("$name: $value");
+        $this->headers[$name] = $value;
         return $this;
     }
 
@@ -59,10 +56,24 @@ class Response
      * @param string $content       Contenu à envoyer (HTML, JSON, etc.)
      * @return self
      */
-    public function setContent( string $content ): self
+    public function setContent(string $content): self
     {
         $this->content = $content;
         return $this;
+    }
+
+    /**
+     * Envoie tous les headers HTTP stockés.
+     */
+    public function sendHeaders(): void
+    {
+        // Code de statut HTTP
+        http_response_code($this->statusCode);
+
+        // Headers
+        foreach ($this->headers as $name => $value) {
+            header("$name: $value");
+        }
     }
 
     /**
@@ -71,8 +82,7 @@ class Response
      */
     public function send(): void
     {
-        // Les headers ont déjà été envoyés dans addHeader/setStatusCode
+        $this->sendHeaders();
         echo $this->content;
     }
-
 }

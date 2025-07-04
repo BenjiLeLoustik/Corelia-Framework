@@ -1,6 +1,6 @@
 <?php
 
-/* ===== /src/Controllers/HomeController.php */
+/* ===== /src/Controllers/HomeController.php ===== */
 namespace App\Controller;
 
 use Corelia\Controller\BaseController;
@@ -12,11 +12,10 @@ use Corelia\Routing\RouteAttribute;
  */
 class HomeController extends BaseController
 {
-
     /**
      * Route principale '/' qui rend le template 'home/index.ctpl'.
-     * 
-     * @return array                Données à passer au template (ex: username, modules)
+     *
+     * @return array Données à passer au template (ex: username, modules)
      */
     #[RouteAttribute(path: '/', template: 'home/index.ctpl')]
     public function index(): array
@@ -29,12 +28,15 @@ class HomeController extends BaseController
 
     /**
      * Route API '/api/ping' qui retourne une réponse JSON.
-     * 
-     * @return array                Données JSON retournées (status, date actuelle)
+     *
+     * @return array Données JSON retournées (status, date actuelle)
      */
     #[RouteAttribute(path: '/api/ping', response: 'jsonResponse')]
     public function ping(): array
     {
-        return ['status' => 'ok', 'now' => date('c')];
+        return [
+            'status' => 'ok',
+            'now' => date('c'),
+        ];
     }
 }

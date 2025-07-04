@@ -10,18 +10,17 @@ namespace Corelia\Http;
  */
 class RedirectResponse extends Response
 {
-
     /**
      * Constructeur.
      *
-     * @param string $url                   URL de redirection
-     * @param int    $statusCode            Code HTTP de redirection (par défaut 302)
+     * @param string $url        URL de redirection
+     * @param int    $statusCode Code HTTP de redirection (par défaut 302)
      */
-    public function __construct( string $url, int $statusCode = 302 )
+    public function __construct(string $url, int $statusCode = 302)
     {
-        parent::setStatusCode( $statusCode );
-        header("location: $url", true, $statusCode);
-        $this->setContent('');
+        $this->setStatusCode($statusCode);
+        $this->addHeader('Location', $url);
+        $this->setContent(''); // Pas de contenu pour une redirection
     }
 
     /**
@@ -29,8 +28,10 @@ class RedirectResponse extends Response
      */
     public function send(): void
     {
-        // Redirection : Rien à afficher, tout est fait dans le constructeur
+        // Envoi des headers définis dans la classe Response
+        parent::sendHeaders();
+
+        // Pour une redirection, il n'y a généralement pas de contenu
         exit;
     }
-
 }
