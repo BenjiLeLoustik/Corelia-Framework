@@ -71,8 +71,8 @@ class CoreliaTemplate
         $relPath        = ltrim(str_replace(['/', '\\'], '_', $relPath), '_');
         $cacheFile      = $this->cacheDir . $relPath . '.php';
 
-        // Si recompilation nécessaire
-        if (!file_exists($cacheFile) || filemtime($cacheFile) < filemtime($this->templatePath)) {
+        // [DEPENDENCY CACHE] Utilise la nouvelle vérification de fraîcheur
+        if (!$this->isCacheFresh($this->templatePath, $cacheFile)) {
             // Collecte les blocs du template courant et de ses parents
             $this->blocks = [];
             $this->parentTemplate = null;
@@ -191,6 +191,55 @@ class CoreliaTemplate
         }
         // Pour les expressions simples
         return $expr;
+    }
+
+    /**
+     * Récupère récursivement toutes les dépendances (extends, includes) d'un template.
+     * @param string $templatePath
+     * @param array &$dependencies
+     * @return array
+     */
+    protected function getTemplateDependencies(string $templatePath, array &$dependencies = []): array
+    {
+        $realPath = realpath($templatePath);
+        if (!$realPath || in_array($realPath, $dependencies)) return $dependencies;
+        $dependencies[] = $realPath;
+
+        $content = @file_get_contents($realPath);
+        if (!$content) return $dependencies;
+
+        // Recherche extends
+        if (preg_match('/\{% extends [\'"]([^\'"]+)[\'"] %\}/', $content, $match)) {
+            $parentPath = $this->resolvePath($match[1], $realPath);
+            $this->getTemplateDependencies($parentPath, $dependencies);
+        }
+        // Recherche includes multiples
+        if (preg_match_all('/\{% include [\'"]([^\'"]+)[\'"] %\}/', $content, $matches)) {
+            foreach ($matches[1] as $inc) {
+                $incPath = $this->resolvePath($inc, $realPath);
+                $this->getTemplateDependencies($incPath, $dependencies);
+            }
+        }
+        return $dependencies;
+    }
+
+    /**
+     * Vérifie si le cache du template est frais en tenant compte de toutes les dépendances.
+     * @param string $templatePath
+     * @param string $cacheFile
+     * @return bool
+     */
+    protected function isCacheFresh(string $templatePath, string $cacheFile): bool
+    {
+        if (!file_exists($cacheFile)) return false;
+        $cacheMTime = filemtime($cacheFile);
+        $dependencies = $this->getTemplateDependencies($templatePath);
+        foreach ($dependencies as $dep) {
+            if (file_exists($dep) && filemtime($dep) > $cacheMTime) {
+                return false;
+            }
+        }
+        return true;
     }
 
     /**

@@ -2,15 +2,34 @@
 
 <!DOCTYPE html>
 <html lang="fr">
-<head>
-    <meta charset="UTF-8">
-    <title>{% block title %}CoreliaPHP - Votre framework PHP moderne{% endblock %}</title>
-    <meta name="description" content="{% block meta_description %}Framework PHP modulaire, rapide et extensible pour vos projets web.{% endblock %}">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <meta name="robots" content="index, follow">
-    {% block style %}{% endblock %}
-</head>
-<body>
-    {% block content %}{% endblock %}
-</body>
+
+    <head>
+        <meta charset="UTF-8" />
+        <title>{% block title %}CoreliaPHP 🚀{% endblock %}</title>
+        <link rel="stylesheet" href="/assets/css/default.css" />
+        <link rel="preconnect" href="https://fonts.googleapis.com">
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
+        {% block head_extra %}{% endblock %}
+    </head>
+
+    <body>
+        <div class="layout">
+            <aside class="sidebar">
+                <h2>🚀 CoreliaPHP</h2>
+                <nav>
+                    <a href="/" class="current"><span>🏠</span> Accueil</a>
+                    <a href="/admin"><span>🛠️</span> CoreliaAdmin</a>
+                    <a href="/docs"><span>📚</span> Documentation</a>
+                    <a href="https://github.com/" target="_blank"><span>🐱</span> GitHub</a>
+                     <a href="https://github.com/" target="_blank"><span>🌐</span> Mes sites</a>
+                </nav>
+            </aside>
+            <section class="content">
+                {% block content %}{% endblock %}
+            </section>
+        </div>
+        {% block body_extra %}{% endblock %}
+    </body>
+
 </html>

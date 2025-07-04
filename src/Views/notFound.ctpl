@@ -1,97 +1,26 @@
-{% extends 'base.ctpl' %}
+<!-- /src/Views/notFound.ctpl -->
 
-{% block style %}
+<!DOCTYPE html>
+<html lang="fr">
 
-	<style>
-		body {
-			margin: 0;
-			font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-			background: #f0f2f5;
-			box-sizing: border-box;
-			color: #333;
-			display: flex;
-			justify-content: center;
-			align-items: center;
-			height: 100vh;
-		}
+    <head>
+        <meta charset="UTF-8" />
+        <title>404 - Page non trouvée | CoreliaPHP 🚀</title>
+        <link rel="stylesheet" href="/assets/css/default.css" />
+        <link rel="preconnect" href="https://fonts.googleapis.com">
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
+    </head>
 
-		.error-page {
-			text-align: center;
-			background: #fff;
-			padding: 40px 60px;
-			border-radius: 12px;
-			box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-			max-width: 480px;
-		}
+    <body>
+        <div class="page-404-bg">
+            <div class="page-404-container">
+                <div class="page-404-title">404</div>
+                <div class="page-404-message">Oups, cette page n’existe pas.</div>
+                <div class="page-404-muted">Il semble que l’adresse soit incorrecte ou la page a été déplacée.</div>
+                <button class="page-404-btn" onclick="window.history.back();">⬅️ Retour en arrière</button>
+            </div>
+        </div>
+    </body>
 
-		.error-page .emoji {
-			font-size: 72px;
-			margin-bottom: 20px;
-			display: block;
-		}
-
-		.error-page h1 {
-			font-size: 3rem;
-			margin: 0 0 10px;
-			color: #4f46e5;
-		}
-
-		.error-page p {
-			font-size: 1.15rem;
-			color: #555;
-			margin: 0 0 30px;
-			line-height: 1.4;
-		}
-
-		.error-page a {
-			display: inline-block;
-			padding: 12px 24px;
-			background-color: #4f46e5;
-			color: #fff;
-			text-decoration: none;
-			font-weight: 600;
-			border-radius: 8px;
-			transition: background-color 0.3s ease;
-		}
-
-		.error-page a:hover {
-			background-color: #4338ca;
-		}
-
-		@media (max-width: 600px) {
-			.error-page {
-				padding: 30px 20px;
-			}
-
-			.error-page h1 {
-				font-size: 2.4rem;
-			}
-
-			.error-page .emoji {
-				font-size: 56px;
-			}
-		}
-	</style>
-	
-{% endblock %}
-
-{% block content %}
-
-	<div class="error-page" role="main" aria-labelledby="error-title">
-
-		<span class="emoji">🚀</span>
-		
-		<h1 id="error-title" style="font-size: 100px; padding: 0 auto;">
-			404 
-			<span style="font-size: 40px; display: block;">Page non trouvée</span>
-		</h1>
-		
-		<p>
-			Oups ! La page que vous recherchez n’existe pas ou a été déplacée.
-		</p>
-
-		<a href="/">Retour à l’accueil</a>
-
-	</div>
-
-{% endblock %}
+</html>
