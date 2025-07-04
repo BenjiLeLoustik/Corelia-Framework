@@ -1,5 +1,7 @@
 <?php
 
+/* ===== /Core/Template/CoreliaTemplate ===== */
+
 namespace Corelia\Template;
 
 /**
@@ -8,49 +10,187 @@ namespace Corelia\Template;
  */
 class CoreliaTemplate
 {
-    /** @var string Chemin du template principal à utiliser */
+    
+    /**
+     * Chemin du template principal à utiliser.
+     * Exemple : /src/Views/home/index.ctpl
+     * @var string
+     */
     protected string $templatePath;
 
-    /** @var array Blocs définis dans les templates (pour l’héritage) */
+    /**
+     * Blocs définis dans les templates (pour la gestion de l’héritage).
+     * Tableau associatif : nom du bloc => contenu du bloc.
+     * @var array<string, string>
+     */
     protected array $blocks = [];
 
-    /** @var string|null Chemin du template parent si extends */
+    /**
+     * Chemin du template parent si le template courant utilise {% extends ... %}.
+     * Null si pas d’héritage.
+     * @var string|null
+     */
     protected ?string $parentTemplate = null;
+
+    /**
+     * Dossier de cache pour les templates compilés en PHP.
+     * Exemple : /var/cache/templates/
+     * @var string
+     */
+    protected string $cacheDir;
 
     /**
      * Constructeur : initialise le moteur avec le chemin du template principal.
      * @param string $templatePath Chemin du template principal à utiliser
+     * @param string|null $cacheDir Dossier de cache compilé (par défaut : var/cache/templates)
      */
-    public function __construct(string $templatePath)
+    public function __construct(string $templatePath, ?string $cacheDir = null)
     {
         $this->templatePath = $templatePath;
+        $this->cacheDir = $cacheDir ?? dirname(__DIR__, 2) . '/var/cache/templates/';
     }
 
     /**
-     * Rend le template avec les variables fournies.
-     * Gère l’héritage et la fusion des blocs.
+     * Rend le template avec les variables fournies, en utilisant le cache compilé.
      * @param array $vars Variables à injecter dans le template
      * @return string HTML généré
      */
     public function render(array $vars = []): string
     {
-        // Variables globales disponibles partout
         $globals = [
             'now' => new \DateTime(),
             'app' => ['name' => 'CoreliaPHP'],
         ];
-        $vars = array_merge($globals, $vars);
-        // Collecte les blocs du template courant et de ses parents
-        $this->collectBlocks($this->templatePath, $vars);
 
-        // Si héritage, rend le parent avec les blocs fusionnés
-        if ($this->parentTemplate) {
-            $parent = new self($this->parentTemplate);
-            $parent->blocks = $this->blocks;
-            return $parent->render($vars);
+        $vars = array_merge($globals, $vars);
+
+        // Nom du cache basé sur le chemin relatif à /src/Views/
+        $viewsDir       = realpath(dirname(__DIR__, 2) . '/src/Views/');
+        $tplRealPath    = realpath($this->templatePath);
+        $relPath        = str_replace($viewsDir, '', $tplRealPath);
+        $relPath        = ltrim(str_replace(['/', '\\'], '_', $relPath), '_');
+        $cacheFile      = $this->cacheDir . $relPath . '.php';
+
+        // Si recompilation nécessaire
+        if (!file_exists($cacheFile) || filemtime($cacheFile) < filemtime($this->templatePath)) {
+            // Collecte les blocs du template courant et de ses parents
+            $this->blocks = [];
+            $this->parentTemplate = null;
+            $this->collectBlocks($this->templatePath, $vars);
+
+            // Si héritage, rend le parent avec les blocs fusionnés
+            if ($this->parentTemplate) {
+                $parent = new self($this->parentTemplate, $this->cacheDir);
+                $parent->blocks = $this->blocks;
+                $compiled = $parent->compileTemplate($this->parentTemplate, $vars, $this->blocks);
+            } else {
+                $compiled = $this->compileTemplate($this->templatePath, $vars, $this->blocks);
+            }
+
+            // S’assure que le dossier existe
+            if (!is_dir(dirname($cacheFile))) {
+                mkdir(dirname($cacheFile), 0777, true);
+            }
+
+            error_log("[CoreliaTemplate] Compilation du template : $cacheFile");
+            file_put_contents($cacheFile, $compiled);
         }
-        // Sinon, rend le template courant
-        return $this->renderTemplate($this->templatePath, $vars, $this->blocks);
+
+        // Récupère les variables dans la portée locale
+        extract($vars, EXTR_SKIP);
+
+        // Capture le rendu du fichier compilé
+        ob_start();
+        include $cacheFile;
+        return ob_get_clean();
+    }
+
+    /**
+     * Compile un template en code PHP exécutable, prêt à être inclus.
+     * @param string $file Chemin du template à compiler
+     * @param array $vars Variables à injecter
+     * @param array $blocks Blocs hérités à utiliser
+     * @return string Code PHP compilé
+     */
+    protected function compileTemplate(string $file, array $vars, array $blocks): string
+    {
+        // Utilise la logique de renderTemplate, mais génère du PHP
+        $tpl = $this->renderTemplate($file, $vars, $blocks);
+
+        // Transforme le template final en PHP exécutable
+        $php = $tpl;
+
+        // Balises variables {{ ... }}
+        $php = preg_replace_callback('/\{\{\s*(.*?)\s*\}\}/', function ($m) {
+            return '<?= htmlspecialchars(' . $this->twigToPhp($m[1]) . ', ENT_QUOTES | ENT_SUBSTITUTE, "UTF-8") ?>';
+        }, $php);
+
+        // Balises raw {{ ...|raw }}
+        $php = preg_replace_callback('/\{\{\s*(.*?)\|raw\s*\}\}/', function ($m) {
+            return '<?= ' . $this->twigToPhp($m[1]) . ' ?>';
+        }, $php);
+
+        // Instructions PHP {% ... %}
+        $php = preg_replace_callback('/\{% (.*?) %\}/s', function ($m) {
+            return '<?php ' . $this->twigToPhp($m[1], true) . ' ?>';
+        }, $php);
+
+        // Enveloppe dans un fichier PHP
+        return "<?php /* Compilé par CoreliaTemplate, ne pas éditer */ ?>\n" . $php;
+    }
+
+    /**
+     * Convertit une expression Twig en PHP natif.
+     * @param string $expr Expression Twig
+     * @param bool $isStatement Si c'est une instruction (for, if, etc.)
+     * @return string
+     */
+    protected function twigToPhp(string $expr, bool $isStatement = false): string
+    {
+        // Remplace les notations Twig par du PHP natif
+        $expr = preg_replace('/\bnot\b/', '!', $expr);
+        $expr = preg_replace('/\band\b/', '&&', $expr);
+        $expr = preg_replace('/\bor\b/', '||', $expr);
+        // Pour les instructions, on adapte
+        if ($isStatement) {
+            // Boucles for
+            if (preg_match('/^for (\w+)(?:,\s*(\w+))? in ([^\s]+)$/', $expr, $m)) {
+                $v = $m[1];
+                $k = $m[2] ?? null;
+                $arr = $m[3];
+                if ($k) {
+                    return "foreach ({$arr} as \${$v} => \${$k}) :";
+                } else {
+                    return "foreach ({$arr} as \${$v}) :";
+                }
+            }
+            // Endfor, endif, etc.
+            if (preg_match('/^end(for|if)$/', $expr, $m)) {
+                return "endforeach;";
+            }
+            // If
+            if (preg_match('/^if (.+)$/', $expr, $m)) {
+                return "if ({$m[1]}) :";
+            }
+            // Elseif
+            if (preg_match('/^elseif (.+)$/', $expr, $m)) {
+                return "elseif ({$m[1]}) :";
+            }
+            // Else
+            if (trim($expr) === 'else') {
+                return "else :";
+            }
+            // Endif
+            if (trim($expr) === 'endif') {
+                return "endif;";
+            }
+            // Set variable
+            if (preg_match('/^set (\w+) = (.+)$/', $expr, $m)) {
+                return "\${$m[1]} = {$m[2]};";
+            }
+        }
+        // Pour les expressions simples
+        return $expr;
     }
 
     /**
