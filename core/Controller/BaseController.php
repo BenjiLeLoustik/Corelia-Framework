@@ -27,6 +27,7 @@ abstract class BaseController
      */
     protected function render(string $template, array $vars = []): Response
     {
+
         $templatePath = $this->resolveTemplatePath($template);
         $tpl = new CoreliaTemplate($templatePath);
         $html = $tpl->render($vars);

@@ -3,33 +3,40 @@
 <!DOCTYPE html>
 <html lang="fr">
 
-    <head>
-        <meta charset="UTF-8" />
-        <title>{% block title %}CoreliaPHP 🚀{% endblock %}</title>
-        <link rel="stylesheet" href="/assets/css/default.css" />
-        <link rel="preconnect" href="https://fonts.googleapis.com">
-        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-        <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
-        {% block head_extra %}{% endblock %}
-    </head>
+<head>
+    <meta charset="UTF-8" />
+    <title>CoreliaTemplate - Dashboard Moderne 🚀</title>
+    <link rel="stylesheet" href="/assets/css/default.css" />
+    <script>
+        function setTheme(theme) {
+            document.documentElement.setAttribute('data-theme', theme);
+            localStorage.setItem('theme', theme);
+        }
+        function toggleTheme() {
+            const current = document.documentElement.getAttribute('data-theme') || 'light';
+            setTheme(current === 'light' ? 'dark' : 'light');
+        }
+        (function () {
+            const saved = localStorage.getItem('theme');
+            if (saved) setTheme(saved);
+            else if (window.matchMedia("(prefers-color-scheme: dark)").matches) setTheme("dark");
+        })();
+    </script>
+</head>
 
-    <body>
-        <div class="layout">
-            <aside class="sidebar">
-                <h2>🚀 CoreliaPHP</h2>
-                <nav>
-                    <a href="/" class="current"><span>🏠</span> Accueil</a>
-                    <a href="/admin"><span>🛠️</span> CoreliaAdmin</a>
-                    <a href="/docs"><span>📚</span> Documentation</a>
-                    <a href="https://github.com/" target="_blank"><span>🐱</span> GitHub</a>
-                     <a href="https://github.com/" target="_blank"><span>🌐</span> Mes sites</a>
-                </nav>
-            </aside>
-            <section class="content">
-                {% block content %}{% endblock %}
-            </section>
-        </div>
-        {% block body_extra %}{% endblock %}
-    </body>
+<body>
+    <header class="header">
+        <span class="logo">🚀 CoreliaPHP</span>
+        <nav class="nav">
+            <a href="/" class="active"><span>🏠</span>Accueil</a>
+            <a href="/admin"><span>🛠️</span>Admin</a>
+            <a href="/mes-sites"><span>🌍</span>Mes sites</a>
+            <a href="/modules"><span>📦</span>Modules</a>
+            <a href="/contact"><span>📬</span>Contact</a>
+            <button class="theme-toggle-btn" onclick="toggleTheme()" title="Changer de thème">🌓</button>
+        </nav>
+    </header>
+    {% block content %}{% endblock %}
+</body>
 
 </html>
