@@ -289,7 +289,13 @@ class CoreliaTemplate
      */
     protected function renderTemplate(string $file, array $vars, array $blocks): string
     {
-        if (!file_exists($file)) return "<!-- Template non trouvé pour : $file -->";
+
+        if (!file_exists($file)) {
+            if (getenv('APP_ENV') === 'dev') {
+                throw new \RuntimeException("Template non trouvé : $file");
+            }
+            return "<!-- Template non trouvé pour : $file -->";
+        }
         $tpl = file_get_contents($file);
 
         // Suppression de la déclaration d’héritage

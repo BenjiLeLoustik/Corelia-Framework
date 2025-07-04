@@ -144,6 +144,9 @@ class Kernel
                         return;
                     }
 
+                    // Log explicite en cas d'erreur de retour
+                    error_log("[Corelia] Erreur : le contrôleur {$controllerClass}::{$method} n'a pas retourné un objet Response.");
+
                     // Si ce n'est pas un objet Response, erreur explicite
                     $response->setStatusCode(500)->setContent(
                         "Erreur : le contrôleur doit retourner un objet Response, JsonResponse ou RedirectResponse."

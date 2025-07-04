@@ -106,7 +106,12 @@ class Response
         // Code de statut HTTP
         http_response_code($this->statusCode);
 
-        // Headers
+        // Headers de sécurité par défaut
+        header('X-Frame-Options: SAMEORIGIN', true);
+        header('X-Content-Type-Options: nosniff', true);
+        header('Referrer-Policy: no-referrer-when-downgrade', true);
+
+        // Headers personnalisés
         foreach ($this->headers as $name => $value) {
             // Pour éviter les doublons de header
             header("$name: $value", true);

@@ -87,6 +87,6 @@ class CacheClearCommand implements CommandInterface
             }
         }
         // Supprime le dossier lui-même à la fin
-        return @rmdir($dir) || true;
+        return @rmdir($dir);
     }
 }

@@ -71,14 +71,20 @@ class Router
         foreach ($this->routes as $route) {
             if ($route['method'] !== $reqMethod) continue;
 
+            // Capture les noms de paramètres dans le chemin
+            preg_match_all('#\{([a-zA-Z_][a-zA-Z0-9_]*)\}#', $route['path'], $paramNames);
             // Remplace {param} par une capture regex
             $pattern = preg_replace('#\{[a-zA-Z_][a-zA-Z0-9_]*\}#', '([^/]+)', $route['path']);
             $pattern = '#^' . $pattern . '$#';
 
             if (preg_match($pattern, $reqPath, $matches)) {
                 array_shift($matches); // Retire le match complet
+                $params = [];
+                foreach ($paramNames[1] as $i => $name) {
+                    $params[$name] = $matches[$i] ?? null;
+                }
                 $routeObj = new Route($route['path'], $route['handler'][0], $route['handler'][1]);
-                $routeObj->setParameters($matches);
+                $routeObj->setParameters($params);
                 return $routeObj;
             }
         }
