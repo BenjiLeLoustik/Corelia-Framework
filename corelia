@@ -1,65 +1,56 @@
-#!/usr/bin/env php
 <?php
 
 require __DIR__ . '/vendor/autoload.php';
 
 use Corelia\CLI\CommandInterface;
 
-// Découverte automatique des commandes du noyau
 $coreCommands = glob( __DIR__ . '/Core/CLI/Commands/*.php' );
 
-// Découverte automatique des commandes de chaque module
-$moduleCommands = glob( __DIR__ . '/modules/*/CLI/Commands/*.php' );
-
-
-$allCommands = array_merge( $coreCommands, $moduleCommands );
-
 $instances = [];
-foreach( $allCommands as $file ){
+
+foreach( $coreCommands as $file ){
+
     require_once $file;
 
-    // Trouve le FQCN à partir du chemin
     $class = getClassFromFile( $file );
 
     if( $class && class_exists( $class ) ){
         $cmd = new $class();
+
         if( $cmd instanceof CommandInterface ){
             $instances[ $cmd->getName() ] = $cmd;
         }
     }
+
 }
 
-// Récupération de la commande demandée
-$argv           = $_SERVER['argv'];
-$commandName    = $argv[1] ?? 'help';
+$argv = $_SERVER['argv'];
+$commandName = $argv[1] ?? 'help';
 
-// Affichage de l'aide si besoin
-if( $commandName == 'help' || !isset( $instances[$commandName] ) ){
+if ($commandName == 'help' || !isset($instances[$commandName])) {
+    
     echo "\nUsage : php corelia <commande> [options]\n\n";
     echo "Commandes disponibles : \n";
-    foreach( $instances as $name => $cmd ){
-        printf( "   %-30s %s\n", $name, $cmd->getDescription() );
+    
+    foreach ($instances as $name => $cmd) {
+        printf("   %-30s %s\n", $name, $cmd->getDescription());
     }
+    
     echo "\n";
-    exit( $commandName === 'help' ? 0 : 1 );
+    
+    exit($commandName === 'help' ? 0 : 1);
 }
 
-// Exécution de la commande demandée
-exit( $instances[ $commandName ]->execute( $argv ) );
+exit($instances[$commandName]->execute($argv));
 
-/**
- * Helper pour retrouver le FQCN d'une classe à partir du chemin du fichier.
- * (Suppose PSR-4 et un seul namespace par fichier)
- */
-function getClassFromFile( $file )
+function getClassFromFile($file)
 {
-    $src = file_get_contents( $file );
-    if( preg_match( '/namespace\s+([^;]+);/i', $src, $m ) ){
-        $ns = trim( $m[1] );
-        if( preg_match( '/class\s+([^\s]+)/i', $src, $m2 ) ){
-            return $ns . '\\' . trim( $m2[1] );
+    $src = file_get_contents($file);
+    if (preg_match('/namespace\s+([^;]+);/i', $src, $m)) {
+        $ns = trim($m[1]);
+        if (preg_match('/class\s+([^\s]+)/i', $src, $m2)) {
+            return $ns . '\\' . trim($m2[1]);
         }
     }
-
     return null;
 }
