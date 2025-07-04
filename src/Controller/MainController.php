@@ -13,20 +13,17 @@ use Corelia\Http\RedirectResponse;
  * Contrôleur principal de l'application.
  * Illustre la gestion de différents types de réponses HTTP.
  */
-class HomeController extends BaseController
+class MainController extends BaseController
 {
     /**
      * Page d'accueil (HTML).
      *
      * @return Response
      */
-    #[RouteAttribute(path: '/', name: 'home.index', methods: ['GET'])]
+    #[RouteAttribute(path: '/', name: 'main.index', methods: ['GET'])]
     public function index(): Response
     {
-        return $this->render('Home/index.ctpl', [
-            'username' => 'Alice',
-            'modules'  => ['Blog', 'Shop', 'Forum'],
-        ]);
+        return $this->render('Main/index.ctpl', []);
     }
 
     /**
