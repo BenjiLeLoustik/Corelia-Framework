@@ -202,4 +202,17 @@ class Request
     {
         return $this->headers;
     }
+
+    /**
+     * Récupère le chemin de la requête (ex: /, /foo/bar).
+     * Ignore la query string.
+     *
+     * @return string
+     */
+    public function getPath(): string
+    {
+        $uri = $this->uri();
+        $pos = strpos($uri, '?');
+        return $pos === false ? $uri : substr($uri, 0, $pos);
+    }
 }

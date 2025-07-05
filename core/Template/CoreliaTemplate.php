@@ -59,7 +59,12 @@ class CoreliaTemplate
     {
         $globals = [
             'now' => new \DateTime(),
-            'app' => ['name' => 'CoreliaPHP'],
+            'APP' => [
+                'NAME' => 'CoreliaPHP',
+                'URL'   => $_ENV['APP_URL']  ?? 'http://localhost',
+                'PORT'  => $_ENV['APP_PORT'] ?? '8000',
+                'BASE'  => rtrim($_ENV['APP_URL'] ?? 'http://localhost', '/') . ':' . ($_ENV['APP_PORT'] ?? '8000'),
+            ] 
         ];
 
         $vars = array_merge($globals, $vars);

@@ -27,7 +27,6 @@ abstract class BaseController
      */
     protected function render(string $template, array $vars = []): Response
     {
-
         $templatePath = $this->resolveTemplatePath($template);
         $tpl = new CoreliaTemplate($templatePath);
         $html = $tpl->render($vars);
@@ -36,7 +35,7 @@ abstract class BaseController
     }
 
     /**
-     * Résout le chemin absolu du template selon la convention globale Corelia.
+     * Résout le chemin absolu du template en tenant compte du contexte workspace ou global.
      *
      * @param string $template  Nom du template (ex: 'home/index.ctpl')
      * @return string           Chemin absolu du fichier template
@@ -45,16 +44,28 @@ abstract class BaseController
     {
         $ds = DIRECTORY_SEPARATOR;
         // On part du dossier /core/Controller/ => on veut la racine du projet
-        $projectRoot = dirname(__DIR__, 2); // remonte de 2 niveaux depuis /core/Controller/
-        $globalPath = "{$projectRoot}{$ds}src{$ds}Views{$ds}{$template}";
+        $projectRoot = dirname(__DIR__, 2);
 
+        // Détection automatique du workspace depuis le namespace du contrôleur
+        if (preg_match('#Workspace\\\\([^\\\\]+)\\\\#', static::class, $m)) {
+            $workspace = $m[1];
+            $workspaceTemplatePath = "{$projectRoot}{$ds}workspace{$ds}{$workspace}{$ds}templates{$ds}{$template}";
+            if (file_exists($workspaceTemplatePath)) {
+                return $workspaceTemplatePath;
+            }
+        }
+
+        // Fallback framework principal
+        $globalPath = "{$projectRoot}{$ds}src{$ds}Views{$ds}{$template}";
         if (file_exists($globalPath)) {
             return $globalPath;
         }
 
         // Message d'erreur explicite si le template est introuvable
         throw new \InvalidArgumentException(
-            "Template introuvable : {$template} (chemin testé : {$globalPath})"
+            "Template introuvable : {$template} (chemins testés : "
+            . (isset($workspaceTemplatePath) ? $workspaceTemplatePath . ', ' : '')
+            . $globalPath . ")"
         );
     }
 

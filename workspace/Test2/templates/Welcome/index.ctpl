@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="fr">
+    <head>
+        <meta charset="UTF-8">
+        <title>Workspace {{ name }} créé !</title>
+        <style>
+            body { font-family: Arial, sans-serif; background: #f9f9f9; color: #222; margin: 0; padding: 2em; }
+            .container { background: #fff; border-radius: 8px; box-shadow: 0 2px 8px #ddd; max-width: 600px; margin: auto; padding: 2em; }
+            h1 { color: #2a8; }
+            code, pre { background: #f4f4f4; padding: 2px 6px; border-radius: 4px; }
+            a { color: #2a8; text-decoration: none; }
+            a:hover { text-decoration: underline; }
+        </style>
+    </head>
+    <body>
+        <div class="container">
+            <h1>🎉 Workspace <strong>{{ name }}</strong> créé avec succès !</h1>
+            <p>Votre espace de travail est prêt à l'emploi.</p>
+            <h2>Instructions pour démarrer :</h2>
+            <ol>
+                <li>
+                    <strong>Démarrer le serveur local :</strong><br>
+                    <code>php corelia serve {{ name }}</code>
+                </li>
+                <li>
+                    <strong>Accéder à votre workspace :</strong><br>
+                    <a href="http://localhost:{{ port }}/" target="_blank">http://localhost:{{ port }}/</a>
+                </li>
+                <li>
+                    <strong>Modifier le code source :</strong><br>
+                    Éditez les fichiers dans <code>/workspace/{{ name }}/src/</code>, <code>/workspace/{{ name }}/templates/</code> et <code>/workspace/{{ name }}/public/</code>
+                </li>
+            </ol>
+            <hr>
+            <p style="color: #888;">Framework Corelia &copy; 2025</p>
+        </div>
+    </body>
+</html>

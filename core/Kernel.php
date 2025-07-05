@@ -15,7 +15,7 @@ use Corelia\Template\CoreliaTemplate;
 /**
  * Noyau principal (Kernel) de Corelia.
  * Gère l'initialisation, la configuration, le routing et l'exécution de la requête HTTP.
- * Version sans gestion de modules.
+ * Version compatible multi-workspaces sans besoin de fichier de routes dans chaque workspace.
  */
 class Kernel
 {
@@ -32,23 +32,23 @@ class Kernel
     protected EventDispatcher $eventDispatcher;
 
     /**
-     * Constructeur du Kernel.
-     * Initialise le noyau, configure le reporting des erreurs, charge la configuration
-     * d'environnement et instancie le gestionnaire d'événements.
+     * Nom du workspace actif (null si framework principal)
+     * @var string|null
      */
-    public function __construct()
+    protected ?string $workspaceName = null;
+
+    /**
+     * Constructeur du Kernel.
+     * @param string|null $workspaceName
+     */
+    public function __construct(?string $workspaceName = null)
     {
+        $this->workspaceName = $workspaceName;
         $this->setupErrorReporting();
         $this->loadEnv();
         $this->eventDispatcher = new EventDispatcher();
     }
 
-    /**
-     * Configure le reporting des erreurs PHP pour le développement.
-     * Affiche toutes les erreurs et les erreurs de démarrage.
-     *
-     * @return void
-     */
     protected function setupErrorReporting(): void
     {
         ini_set('display_errors', 1);
@@ -56,13 +56,6 @@ class Kernel
         error_reporting(E_ALL);
     }
 
-    /**
-     * Charge les variables d'environnement depuis le fichier .env.
-     * Remplit $this->config et $_ENV pour l'application.
-     *
-     * @throws \RuntimeException si le fichier .env est absent
-     * @return void
-     */
     protected function loadEnv(): void
     {
         $envFile = __DIR__ . '/../.env';
@@ -84,15 +77,52 @@ class Kernel
 
     /**
      * Point d'entrée principal du framework.
-     * Traite la requête HTTP, résout la route, exécute le contrôleur ciblé,
-     * gère le rendu (template, JSON, Response) et envoie la réponse au client.
-     *
-     * @return void
+     * Si workspace actif, cherche automatiquement WelcomeController du workspace.
+     * Sinon, logique standard du framework principal.
      */
     public function handle(): void
     {
         $request  = new Request();
         $response = new Response();
+
+        // === Mode workspace : route automatique sur WelcomeController ===
+        if ($this->workspaceName) {
+            // On ne traite que la racine "/"
+            if ($request->getPath() === '/') {
+                $controllerClass = "Workspace\\{$this->workspaceName}\\Controllers\\WelcomeController";
+                $controllerFile = __DIR__ . "/../../workspace/{$this->workspaceName}/src/Controllers/WelcomeController.php";
+
+                if (file_exists($controllerFile)) {
+                    require_once $controllerFile;
+                }
+
+                if (class_exists($controllerClass) && method_exists($controllerClass, 'index')) {
+                    $controller = new $controllerClass();
+                    if (method_exists($controller, 'setEventDispatcher')) {
+                        $controller->setEventDispatcher($this->eventDispatcher);
+                    }
+                    $result = $controller->index();
+                    if ($result instanceof Response) {
+                        $result->send();
+                        return;
+                    }
+                }
+
+                // Fallback : page d’erreur simple si le contrôleur n’existe pas
+                $response->setStatusCode(404)->setContent(
+                    "<h1>Workspace « {$this->workspaceName} » : page d'accueil non trouvée.</h1>"
+                )->send();
+                return;
+            } else {
+                // Autres routes : 404 simple (ou à complexifier selon besoins)
+                $response->setStatusCode(404)->setContent(
+                    "<h1>Page non trouvée dans le workspace « {$this->workspaceName} ».</h1>"
+                )->send();
+                return;
+            }
+        }
+
+        // === Mode framework principal (inchangé) ===
         $router   = new Router();
 
         // Découverte automatique des routes via les attributs des contrôleurs (src/Controller)
@@ -144,10 +174,8 @@ class Kernel
                         return;
                     }
 
-                    // Log explicite en cas d'erreur de retour
                     error_log("[Corelia] Erreur : le contrôleur {$controllerClass}::{$method} n'a pas retourné un objet Response.");
 
-                    // Si ce n'est pas un objet Response, erreur explicite
                     $response->setStatusCode(500)->setContent(
                         "Erreur : le contrôleur doit retourner un objet Response, JsonResponse ou RedirectResponse."
                     )->send();
