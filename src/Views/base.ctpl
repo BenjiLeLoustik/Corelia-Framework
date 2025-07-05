@@ -5,37 +5,12 @@
 
 <head>
     <meta charset="UTF-8" />
-    <title>CoreliaTemplate - Dashboard Moderne 🚀</title>
+    <title>{% block title %}{% endblock %}</title>
     <link rel="stylesheet" href="/assets/css/default.css" />
-    <script>
-        function setTheme(theme) {
-            document.documentElement.setAttribute('data-theme', theme);
-            localStorage.setItem('theme', theme);
-        }
-        function toggleTheme() {
-            const current = document.documentElement.getAttribute('data-theme') || 'light';
-            setTheme(current === 'light' ? 'dark' : 'light');
-        }
-        (function () {
-            const saved = localStorage.getItem('theme');
-            if (saved) setTheme(saved);
-            else if (window.matchMedia("(prefers-color-scheme: dark)").matches) setTheme("dark");
-        })();
-    </script>
+    <script src="/assets/js/changeTheme.js"></script>
 </head>
 
 <body>
-    <header class="header">
-        <span class="logo">🚀 CoreliaPHP</span>
-        <nav class="nav">
-            <a href="/" class="active"><span>🏠</span>Accueil</a>
-            <a href="/admin"><span>🛠️</span>Admin</a>
-            <a href="/mes-sites"><span>🌍</span>Mes sites</a>
-            <a href="/modules"><span>📦</span>Modules</a>
-            <a href="/contact"><span>📬</span>Contact</a>
-            <button class="theme-toggle-btn" onclick="toggleTheme()" title="Changer de thème">🌓</button>
-        </nav>
-    </header>
     {% block content %}{% endblock %}
 </body>
 

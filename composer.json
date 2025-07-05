@@ -7,10 +7,7 @@
             "Corelia\\": "core/",
             "App\\": "src/",
             "Modules\\": "modules/",
-            "Workspace\\Test\\Controllers\\": "workspace/Test/src/Controllers/",
-            "Workspace\\Test2\\Controllers\\": "workspace/Test2/src/Controllers/",
-            "Workspace\\Test3\\Controllers\\": "workspace/Test3/src/Controllers/",
-            "Workspace\\Test4\\Controllers\\": "workspace/Test4/src/Controllers/"
+            "Workspace\\Test\\Controllers\\": "workspace/Test/src/Controllers/"
         }
     },
     "require": {

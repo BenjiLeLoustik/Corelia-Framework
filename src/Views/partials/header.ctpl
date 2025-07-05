@@ -1,0 +1,11 @@
+<!-- /src/Views/partials/header.ctpl -->
+
+<header class="header">
+    <span class="logo">🚀{{ APP.NAME }}</span>
+    <nav class="nav">
+        <a href="#" class="active"><span>🏠</span>Accueil</a>
+        <a href="#"><span>🛠️</span>Admin</a>
+        <a href="#"><span>🗂️</span>Workspace</a>
+        <button class="theme-toggle-btn" onclick="toggleTheme()" title="Changer de thème">🌓</button>
+    </nav>
+</header>
