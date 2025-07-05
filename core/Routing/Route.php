@@ -6,7 +6,15 @@ namespace Corelia\Routing;
 
 /**
  * Objet de routing pour une route matchée.
- * Représente une route, son contrôleur, sa méthode et ses paramètres.
+ *
+ * Représente une route HTTP, son chemin, le contrôleur associé, la méthode à appeler
+ * et les éventuels paramètres extraits de l'URL.
+ * 
+ * Cette classe sert d'objet de transfert entre le routeur et le système de dispatch.
+ *
+ * Usage typique :
+ *   $route = new Route('/user/{id}', 'UserController', 'show');
+ *   $route->setParameters(['id' => 42]);
  */
 class Route
 {
@@ -18,6 +26,7 @@ class Route
 
     /**
      * Nom du contrôleur associé à la route (ex: 'AdminController')
+     * Peut être un FQCN ou un alias selon l'architecture du framework.
      * @var string
      */
     protected string $controller;
@@ -30,12 +39,13 @@ class Route
 
     /**
      * Paramètres extraits de l'URL (ex: ['id' => 42])
-     * @var array
+     * @var array<string, mixed>
      */
     protected array $parameters = [];
 
     /**
      * Constructeur.
+     *
      * @param string $path        Chemin de la route (ex: '/admin/dashboard')
      * @param string $controller  Nom du contrôleur (ex: 'AdminController')
      * @param string $method      Méthode du contrôleur à appeler (défaut 'index')
@@ -49,7 +59,8 @@ class Route
 
     /**
      * Retourne le chemin de la route.
-     * @return string
+     *
+     * @return string Chemin de la route (ex: '/admin/dashboard')
      */
     public function getPath(): string
     {
@@ -57,8 +68,9 @@ class Route
     }
 
     /**
-     * Retourne le nom du contrôleur.
-     * @return string
+     * Retourne le nom du contrôleur associé à la route.
+     *
+     * @return string Nom du contrôleur
      */
     public function getController(): string
     {
@@ -66,8 +78,9 @@ class Route
     }
 
     /**
-     * Retourne la méthode du contrôleur.
-     * @return string
+     * Retourne la méthode du contrôleur à appeler.
+     *
+     * @return string Nom de la méthode (ex: 'index', 'show', etc.)
      */
     public function getMethod(): string
     {
@@ -75,8 +88,9 @@ class Route
     }
 
     /**
-     * Retourne les paramètres de la route.
-     * @return array
+     * Retourne les paramètres extraits de l'URL pour cette route.
+     *
+     * @return array<string, mixed> Tableau associatif des paramètres (ex: ['id' => 42])
      */
     public function getParameters(): array
     {
@@ -84,8 +98,10 @@ class Route
     }
 
     /**
-     * Définit les paramètres de la route.
-     * @param array $params
+     * Définit les paramètres extraits de l'URL pour cette route.
+     *
+     * @param array<string, mixed> $params Tableau associatif des paramètres
+     * @return void
      */
     public function setParameters(array $params): void
     {

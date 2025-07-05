@@ -6,7 +6,12 @@ namespace Corelia\Http;
 
 /**
  * Classe représentant une requête HTTP.
- * Fournit des méthodes pour accéder aux données GET, POST, headers, JSON, etc.
+ *
+ * Fournit des méthodes pour accéder facilement aux données GET, POST, headers,
+ * méthode HTTP, corps brut, JSON, etc.
+ * 
+ * Cette classe encapsule les superglobales PHP ($_GET, $_POST, $_SERVER)
+ * pour offrir une API plus propre et testable dans les contrôleurs.
  */
 class Request
 {
@@ -42,7 +47,9 @@ class Request
 
     /**
      * Constructeur.
+     * 
      * Initialise les propriétés à partir des superglobales PHP.
+     * Parse également les headers HTTP et lit le corps brut de la requête.
      */
     public function __construct()
     {
@@ -104,8 +111,9 @@ class Request
 
     /**
      * Parse les headers HTTP à partir de $_SERVER.
+     * 
      * Garde les clés en minuscules pour faciliter l'accès.
-     * Ajoute aussi Content-Type et Content-Length si présents.
+     * Ajoute aussi Content-Type et Content-Length si présents (non préfixés par HTTP_).
      *
      * @return array<string, string> Tableau associatif des headers HTTP
      */
@@ -140,7 +148,7 @@ class Request
     }
 
     /**
-     * Récupère l'URI demandée dans la requête.
+     * Récupère l'URI demandée dans la requête (ex: /, /foo/bar?x=1).
      *
      * @return string
      */
@@ -205,7 +213,7 @@ class Request
 
     /**
      * Récupère le chemin de la requête (ex: /, /foo/bar).
-     * Ignore la query string.
+     * Ignore la query string (tout ce qui suit '?').
      *
      * @return string
      */

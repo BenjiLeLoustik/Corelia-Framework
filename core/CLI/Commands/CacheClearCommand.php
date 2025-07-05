@@ -35,6 +35,31 @@ class CacheClearCommand implements CommandInterface
     }
 
     /**
+     * Retourne l'aide détaillée de la commande.
+     * 
+     * Cette méthode permet d'afficher une documentation complète lorsque
+     * l'utilisateur ajoute --help ou -h à la commande.
+     *
+     * @return string Texte d'aide détaillé
+     */
+    public function getHelp(): string
+    {
+        return  <<<TXT
+                Commande: cache:clear
+
+                Description :
+                    Vide tous les caches de l'application Corelia (templates, sessions, etc.)
+                    Par défaut, supprime le cache des templates compilés.
+
+                Utilisation :
+                    php corelia cache:clear
+
+                Exemples :
+                    php corelia cache:clear
+                TXT;
+    }
+
+    /**
      * Exécute la commande de nettoyage du cache.
      * Supprime récursivement le dossier du cache des templates.
      * Affiche un message de succès ou d'erreur selon le résultat.

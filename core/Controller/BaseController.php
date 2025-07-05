@@ -1,5 +1,7 @@
 <?php
 
+/* ===== /Core/Controller/BaseController.php ===== */
+
 namespace Corelia\Controller;
 
 use Corelia\Template\CoreliaTemplate;
@@ -49,7 +51,7 @@ abstract class BaseController
         // Détection automatique du workspace depuis le namespace du contrôleur
         if (preg_match('#Workspace\\\\([^\\\\]+)\\\\#', static::class, $m)) {
             $workspace = $m[1];
-            $workspaceTemplatePath = "{$projectRoot}{$ds}workspace{$ds}{$workspace}{$ds}templates{$ds}{$template}";
+            $workspaceTemplatePath = "{$projectRoot}{$ds}workspace{$ds}{$workspace}{$ds}src{$ds}Views{$ds}{$template}";
             if (file_exists($workspaceTemplatePath)) {
                 return $workspaceTemplatePath;
             }

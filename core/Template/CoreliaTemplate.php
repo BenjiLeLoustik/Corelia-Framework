@@ -1,16 +1,21 @@
 <?php
 
-/* ===== /Core/Template/CoreliaTemplate ===== */
+/* ===== /Core/Template/CoreliaTemplate.php ===== */
 
 namespace Corelia\Template;
 
 /**
  * Moteur de template maison inspiré de Twig (80% des usages courants).
+ *
  * Gère blocs, héritage, boucles, conditions, includes, appels de méthodes/propriétés, filtres de base.
+ * Compile les templates en PHP pour des performances optimales.
+ * 
+ * Usage typique :
+ *   $tpl = new CoreliaTemplate('/src/Views/home/index.ctpl');
+ *   echo $tpl->render(['user' => $user]);
  */
 class CoreliaTemplate
 {
-    
     /**
      * Chemin du template principal à utiliser.
      * Exemple : /src/Views/home/index.ctpl
@@ -41,8 +46,9 @@ class CoreliaTemplate
 
     /**
      * Constructeur : initialise le moteur avec le chemin du template principal.
-     * @param string $templatePath Chemin du template principal à utiliser
-     * @param string|null $cacheDir Dossier de cache compilé (par défaut : var/cache/templates)
+     *
+     * @param string      $templatePath Chemin du template principal à utiliser
+     * @param string|null $cacheDir     Dossier de cache compilé (défaut : var/cache/templates)
      */
     public function __construct(string $templatePath, ?string $cacheDir = null)
     {
@@ -52,8 +58,9 @@ class CoreliaTemplate
 
     /**
      * Rend le template avec les variables fournies, en utilisant le cache compilé.
+     *
      * @param array $vars Variables à injecter dans le template
-     * @return string HTML généré
+     * @return string     HTML généré
      */
     public function render(array $vars = []): string
     {
@@ -112,10 +119,11 @@ class CoreliaTemplate
 
     /**
      * Compile un template en code PHP exécutable, prêt à être inclus.
-     * @param string $file Chemin du template à compiler
-     * @param array $vars Variables à injecter
-     * @param array $blocks Blocs hérités à utiliser
-     * @return string Code PHP compilé
+     *
+     * @param string $file   Chemin du template à compiler
+     * @param array  $vars   Variables à injecter
+     * @param array  $blocks Blocs hérités à utiliser
+     * @return string        Code PHP compilé
      */
     protected function compileTemplate(string $file, array $vars, array $blocks): string
     {
@@ -146,9 +154,10 @@ class CoreliaTemplate
 
     /**
      * Convertit une expression Twig en PHP natif.
-     * @param string $expr Expression Twig
-     * @param bool $isStatement Si c'est une instruction (for, if, etc.)
-     * @return string
+     *
+     * @param string $expr        Expression Twig
+     * @param bool   $isStatement Si c'est une instruction (for, if, etc.)
+     * @return string             Code PHP équivalent
      */
     protected function twigToPhp(string $expr, bool $isStatement = false): string
     {

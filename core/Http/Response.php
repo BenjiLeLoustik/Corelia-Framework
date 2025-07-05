@@ -6,8 +6,17 @@ namespace Corelia\Http;
 
 /**
  * Classe de base pour gérer une réponse HTTP.
+ *
  * Permet de définir le code de statut, les headers et le contenu,
  * puis d'envoyer la réponse complète au client.
+ * Toutes les autres réponses (JSON, redirection, etc.) héritent de cette classe.
+ *
+ * Usage typique :
+ *   $response = new Response();
+ *   $response->setStatusCode(200)
+ *            ->addHeader('Content-Type', 'text/html')
+ *            ->setContent('<h1>Hello</h1>')
+ *            ->send();
  */
 class Response
 {
@@ -33,7 +42,7 @@ class Response
      * Définit le code HTTP de la réponse.
      *
      * @param int $code Code HTTP (ex: 200, 404)
-     * @return self
+     * @return self Permet le chaînage des appels (fluent interface)
      */
     public function setStatusCode(int $code): self
     {
@@ -44,7 +53,7 @@ class Response
     /**
      * Retourne le code HTTP actuel de la réponse.
      *
-     * @return int
+     * @return int Code HTTP de la réponse
      */
     public function getStatusCode(): int
     {
@@ -56,7 +65,7 @@ class Response
      *
      * @param string $name  Nom du header (ex: Content-Type)
      * @param string $value Valeur du header
-     * @return self
+     * @return self Permet le chaînage des appels
      */
     public function addHeader(string $name, string $value): self
     {
@@ -67,7 +76,7 @@ class Response
     /**
      * Retourne tous les headers HTTP définis.
      *
-     * @return array<string, string>
+     * @return array<string, string> Tableau associatif des headers
      */
     public function getHeaders(): array
     {
@@ -78,7 +87,7 @@ class Response
      * Définit le contenu de la réponse.
      *
      * @param string $content Contenu à envoyer (HTML, JSON, etc.)
-     * @return self
+     * @return self Permet le chaînage des appels
      */
     public function setContent(string $content): self
     {
@@ -89,7 +98,7 @@ class Response
     /**
      * Retourne le contenu de la réponse.
      *
-     * @return string
+     * @return string Contenu de la réponse
      */
     public function getContent(): string
     {
@@ -98,6 +107,9 @@ class Response
 
     /**
      * Envoie tous les headers HTTP stockés, ainsi que le code de statut.
+     *
+     * Ajoute aussi des headers de sécurité par défaut (X-Frame-Options, etc.).
+     * Les headers personnalisés sont envoyés ensuite.
      *
      * @return void
      */
@@ -120,7 +132,9 @@ class Response
 
     /**
      * Envoie la réponse HTTP complète (headers + contenu).
-     * Affiche le contenu au client.
+     *
+     * Appelle sendHeaders() puis affiche le contenu au client.
+     * À utiliser en fin de traitement d'une requête.
      *
      * @return void
      */

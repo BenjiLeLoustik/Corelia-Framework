@@ -14,19 +14,25 @@ use Corelia\Template\CoreliaTemplate;
 
 /**
  * Noyau principal (Kernel) de Corelia.
+ *
  * Gère l'initialisation, la configuration, le routing et l'exécution de la requête HTTP.
  * Version compatible multi-workspaces sans besoin de fichier de routes dans chaque workspace.
+ * 
+ * Usage typique :
+ *   $kernel = new Kernel();
+ *   $kernel->handle();
  */
 class Kernel
 {
     /**
      * Configuration chargée depuis .env
-     * @var array
+     * @var array<string, mixed>
      */
     protected array $config = [];
 
     /**
      * Gestionnaire d'événements Corelia.
+     * Permet d'enregistrer et de dispatcher des événements applicatifs.
      * @var EventDispatcher
      */
     protected EventDispatcher $eventDispatcher;
@@ -39,7 +45,11 @@ class Kernel
 
     /**
      * Constructeur du Kernel.
-     * @param string|null $workspaceName
+     *
+     * Initialise le workspace actif, la gestion des erreurs, charge la config .env
+     * et instancie le gestionnaire d'événements.
+     *
+     * @param string|null $workspaceName Nom du workspace actif (ou null pour le framework principal)
      */
     public function __construct(?string $workspaceName = null)
     {
@@ -49,6 +59,11 @@ class Kernel
         $this->eventDispatcher = new EventDispatcher();
     }
 
+    /**
+     * Configure le reporting des erreurs PHP (dev friendly).
+     *
+     * @return void
+     */
     protected function setupErrorReporting(): void
     {
         ini_set('display_errors', 1);
@@ -56,6 +71,13 @@ class Kernel
         error_reporting(E_ALL);
     }
 
+    /**
+     * Charge la configuration à partir du fichier .env à la racine du projet.
+     * Remplit $this->config, $_ENV et les variables d'environnement système.
+     *
+     * @throws \RuntimeException si le fichier .env est absent
+     * @return void
+     */
     protected function loadEnv(): void
     {
         $envFile = __DIR__ . '/../.env';
@@ -77,8 +99,12 @@ class Kernel
 
     /**
      * Point d'entrée principal du framework.
-     * Si workspace actif, cherche automatiquement WelcomeController du workspace.
-     * Sinon, logique standard du framework principal.
+     * 
+     * - Si workspace actif, cherche automatiquement WelcomeController du workspace.
+     * - Sinon, logique standard du framework principal avec routing auto par attributs.
+     * - Gère les réponses HTTP, les erreurs et la page d'accueil.
+     *
+     * @return void
      */
     public function handle(): void
     {
@@ -98,6 +124,7 @@ class Kernel
 
                 if (class_exists($controllerClass) && method_exists($controllerClass, 'index')) {
                     $controller = new $controllerClass();
+                    // Injection éventuelle du gestionnaire d'événements
                     if (method_exists($controller, 'setEventDispatcher')) {
                         $controller->setEventDispatcher($this->eventDispatcher);
                     }
@@ -122,7 +149,7 @@ class Kernel
             }
         }
 
-        // === Mode framework principal (inchangé) ===
+        // === Mode framework principal (standard) ===
         $router   = new Router();
 
         // Découverte automatique des routes via les attributs des contrôleurs (src/Controller)

@@ -31,6 +31,7 @@ if ($commandName == 'help' || !isset($instances[$commandName])) {
     
     echo "\nUsage : php corelia <commande> [options]\n\n";
     echo "Commandes disponibles : \n";
+    echo "Utilsez --help ou -h pour avoir toutes les informations d'une commande. \n\n";
     
     foreach ($instances as $name => $cmd) {
         printf("   %-30s %s\n", $name, $cmd->getDescription());
@@ -39,6 +40,17 @@ if ($commandName == 'help' || !isset($instances[$commandName])) {
     echo "\n";
     
     exit($commandName === 'help' ? 0 : 1);
+}
+
+if( in_array( '--help', $argv ) || in_array( '-h', $argv ) ){
+    $cmd = $instances[$commandName];
+    if( method_exists( $cmd, 'getHelp' ) ){
+        echo $cmd->getHelp() . "\n";
+    }else{
+        echo $cmd->getDescription() . "\n";
+    }
+
+    exit(0);
 }
 
 exit($instances[$commandName]->execute($argv));
